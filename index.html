@@ -1,14 +1,600 @@
+<!DOCTYPE html><html lang="de"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Stundenerfassung</title>    <meta name="apple-mobile-web-app-capable" content="yes">    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">    <meta name="apple-mobile-web-app-title" content="Stunden">    <meta name="theme-color" content="#667eea">    <link rel="manifest" id="manifest-link">    <style>        * { box-sizing: border-box; margin: 0; padding: 0; }        body {            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            min-height: 100vh;            padding: 20px;        }        .container { max-width: 1000px; margin: 0 auto; }        h1 {            color: white; text-align: center; margin-bottom: 24px;            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);        }        .card {            background: white; border-radius: 16px; padding: 24px;            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);        }        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }        .form-group { display: flex; flex-direction: column; }        .form-group.full-width { grid-column: 1 / -1; }        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }        input, select, textarea {            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;        }        input:focus, select:focus, textarea:focus {            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);        }        input.error, select.error {            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);        }        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }        .input-with-button { display: flex; gap: 8px; }        .input-with-button select { flex: 1; }        .add-btn {            background: #667eea; color: white; border: none; border-radius: 8px;            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;        }        .add-btn:hover { background: #5a6fd6; }        .install-banner {            background: linear-gradient(135deg, #2ed573, #17c0eb);            color: #222; border-radius: 12px; padding: 16px 20px;            margin-bottom: 20px; display: none;            align-items: center; justify-content: space-between; gap: 12px;        }        .install-banner.visible { display: flex; }        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }        .btn-install {            background: white; color: #333; border: none; padding: 10px 18px;            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;        }        .btn-dismiss {            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #444; flex-shrink: 0;        }        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }        .btn-export {            background: #2ed573; color: #222; border: none; padding: 12px 20px;            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;            display: flex; align-items: center; gap: 8px; transition: background 0.2s;        }        .btn-export:hover { background: #26c462; }        .btn-import {            background: #667eea; color: white; border: none; padding: 12px 20px;            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;            display: flex; align-items: center; gap: 8px; transition: background 0.2s;        }        .btn-import:hover { background: #5a6fd6; }        .toast {            position: fixed; bottom: 24px; left: 50%;            transform: translateX(-50%) translateY(80px);            background: #333; color: white; padding: 12px 24px;            border-radius: 30px; font-size: 0.95rem; z-index: 2000;            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;        }        .toast.error   { background: #ff4757; }        .toast.success { background: #2ed573; color: #222; }        .toast.show    { transform: translateX(-50%) translateY(0); }        .btn-primary {            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            color: white; border: none; padding: 14px 28px; border-radius: 8px;            font-size: 1rem; font-weight: 600; cursor: pointer;            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;        }        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }        .table-container { overflow-x: auto; }        table { width: 100%; border-collapse: collapse; margin-top: 8px; }        th {            background: #f8f9fa; padding: 12px; text-align: left;            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;        }        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }        tr:hover { background: #f8f9fa; }        .delete-btn {            background: #ff4757; color: white; border: none; padding: 6px 12px;            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;        }        .delete-btn:hover { background: #ff3344; }        .summary {            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;            display: flex; justify-content: space-between; align-items: center;        }        .summary-label { font-size: 1rem; opacity: 0.9; }        .summary-value { font-size: 2rem; font-weight: 700; }        .empty-state { text-align: center; padding: 40px; color: #999; }        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }        .modal {            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;        }        .modal.active { display: flex; }        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }        .modal-content h3 { margin-bottom: 16px; color: #333; }        .modal-content input { width: 100%; margin-bottom: 16px; }        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }        @media (max-width: 600px) {            .form-grid { grid-template-columns: 1fr; }            th, td { padding: 8px; font-size: 0.85rem; }            .sync-bar { flex-direction: column; align-items: stretch; }            .btn-export, .btn-import { justify-content: center; }            .install-banner { flex-wrap: wrap; }        }    </style></head><body><div class="container">    <h1>🔧 Stundenerfassung Hausmeister</h1>    <div class="install-banner" id="install-banner">        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>        <button class="btn-install" id="btn-install">Installieren</button>        <button class="btn-dismiss" id="btn-dismiss">✕</button>    </div>    <div class="card">        <h2>🔄 Daten übertragen (PC ↔ Handy)</h2>        <div class="sync-bar">            <p>Exportiere deine Daten als Datei und importiere sie auf dem anderen Gerät.</p>            <button class="btn-export" onclick="exportData()">⬇ Exportieren</button>            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Importieren</button>            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">        </div>    </div>    <div class="card">        <h2>📝 Neue Arbeitszeit erfassen</h2>        <div class="form-grid">            <div class="form-group">                <label for="datum">Datum</label>                <input type="date" id="datum">            </div>            <div class="form-group">                <label for="von">Von (z.B. 0800)</label>                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>            </div>            <div class="form-group">                <label for="bis">Bis (z.B. 1630)</label>                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>            </div>            <div class="form-group">                <label for="taetigkeit">Tätigkeit</label>                <div class="input-with-button">                    <select id="taetigkeit">                        <option value="">Bitte wählen…</option>                        <option>Reinigung</option>                        <option>Gartenarbeit</option>                        <option>Reparatur</option>                        <option>Winterdienst</option>                        <option>Müllentsorgung</option>                    </select>                    <button class="add-btn" onclick="openModal('taetigkeit')">+</button>                </div>            </div>            <div class="form-group">                <label for="ort">Beschäftigungsort</label>                <div class="input-with-button">                    <select id="ort">                        <option value="">Bitte wählen…</option>                        <option>Friedenrathstraße 7</option>                        <option>Brockesstraße 9</option>                        <option>Brockesstraße 9a</option>                        <option>Richard-Strauss-Straße 6</option>                    </select>                    <button class="add-btn" onclick="openModal('ort')">+</button>                </div>            </div>            <div class="form-group full-width">                <label for="bemerkungen">Bemerkungen</label>                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>            </div>        </div>        <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>    </div>    <div class="card">        <h2>📋 Erfasste Arbeitszeiten</h2>        <div class="table-container">            <table>                <thead>                    <tr>                        <th>Datum</th><th>Von</th><th>Bis</th><th>Stunden</th>                        <th>Tätigkeit</th><th>Ort</th><th>Bemerkung</th><th></th>                    </tr>                </thead>                <tbody id="entries-body"></tbody>            </table>            <div class="empty-state" id="empty-state">                <div class="empty-state-icon">📭</div>                <p>Noch keine Einträge vorhanden</p>            </div>        </div>        <div class="summary" id="summary" style="display:none;">            <span class="summary-label">Gesamtstunden diesen Monat</span>            <span class="summary-value" id="total-hours">0,00 Std.</span>        </div>    </div></div><div class="toast" id="toast"></div><div class="modal" id="modal">    <div class="modal-content">        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">        <div class="modal-buttons">            <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>            <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>        </div>    </div></div><script>// ── PWA Manifest ───────────────────────────────────────────────────────────const manifest = {    name: "Stundenerfassung Hausmeister",    short_name: "Stunden",    description: "Stundenerfassung für den Hausmeister",    start_url: "./",    display: "standalone",    background_color: "#667eea",    theme_color: "#667eea",    icons: [{        src: "data:image/svg+xml," + encodeURIComponent(            '<svg xmlns="[w3.org](http://www.w3.org/2000/svg)" viewBox="0 0 512 512">' +            '<rect width="512" height="512" rx="100" fill="#667eea"/>' +            '<text x="256" y="340" font-size="300" text-anchor="middle" fill="white">🔧</text>' +            '</svg>'        ),        sizes: "512x512",        type: "image/svg+xml",        purpose: "any maskable"    }]};const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);// ── Service Worker ─────────────────────────────────────────────────────────if ('serviceWorker' in navigator) {    const swCode = `        self.addEventListener('install', () => self.skipWaiting());        self.addEventListener('activate', () => self.clients.claim());        self.addEventListener('fetch', e => {            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));        });    `;    const swURL = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));    navigator.serviceWorker.register(swURL).catch(() => {});}// ── Install-Prompt ─────────────────────────────────────────────────────────let deferredPrompt = null;window.addEventListener('beforeinstallprompt', e => {    e.preventDefault();    deferredPrompt = e;    document.getElementById('install-banner').classList.add('visible');});document.getElementById('btn-install').addEventListener('click', async () => {    if (!deferredPrompt) return;    deferredPrompt.prompt();    const { outcome } = await deferredPrompt.userChoice;    if (outcome === 'accepted') showToast('App installiert ✓', 'success');    deferredPrompt = null;    document.getElementById('install-banner').classList.remove('visible');});document.getElementById('btn-dismiss').addEventListener('click', () => {    document.getElementById('install-banner').classList.remove('visible');});window.addEventListener('appinstalled', () => {    document.getElementById('install-banner').classList.remove('visible');});// ── State ──────────────────────────────────────────────────────────────────let entries = [];let modalType = '';try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }// ── Init ───────────────────────────────────────────────────────────────────document.getElementById('datum').valueAsDate = new Date();loadCustomOptions();renderEntries();document.getElementById('save-btn').addEventListener('click', addEntry);document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });// ── Toast ──────────────────────────────────────────────────────────────────let toastTimer;function showToast(msg, type = 'error') {    const t = document.getElementById('toast');    t.textContent = msg;    t.className = 'toast ' + type + ' show';    clearTimeout(toastTimer);    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);}// ── Feldmarkierung ─────────────────────────────────────────────────────────function markError(id) {    const el = document.getElementById(id);    el.classList.add('error');    el.addEventListener('input',  () => el.classList.remove('error'), { once: true });    el.addEventListener('change', () => el.classList.remove('error'), { once: true });}// ── Zeithelfer ─────────────────────────────────────────────────────────────function parseTime(s) {    s = String(s).trim();    if (!/^\d{4}$/.test(s)) return null;    const h = parseInt(s.slice(0,2), 10);    const m = parseInt(s.slice(2,4), 10);    if (h > 23 || m > 59) return null;    return { h, m };}function fmtTime(t) {    return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');}function calcHours(von, bis) {    const v = parseTime(von), b = parseTime(bis);    if (!v || !b) return 0;    let vMin = v.h * 60 + v.m, bMin = b.h * 60 + b.m;    if (bMin <= vMin) bMin += 1440;    return (bMin - vMin) / 60;}function fmtDec(n) { return n.toFixed(2).replace('.', ','); }// ── Eintrag speichern ──────────────────────────────────────────────────────function addEntry() {    const datum       = document.getElementById('datum').value;    const von         = document.getElementById('von').value.trim();    const bis         = document.getElementById('bis').value.trim();    const taetigkeit  = document.getElementById('taetigkeit').value;    const ort         = document.getElementById('ort').value;    const bemerkungen = document.getElementById('bemerkungen').value.trim();    if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }    if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }    if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }    if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }    if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }    entries.push({        id: Date.now(),        datum, von, bis,        hours: calcHours(von, bis),        taetigkeit, ort, bemerkungen    });    entries.sort((a, b) => a.datum.localeCompare(b.datum));    persist();    renderEntries();    showToast('Eintrag gespeichert ✓', 'success');    ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');    document.getElementById('taetigkeit').value = '';    document.getElementById('ort').value = '';}// ── Eintrag löschen ────────────────────────────────────────────────────────function deleteEntry(id) {    entries = entries.filter(e => e.id !== id);    persist();    renderEntries();    showToast('Eintrag gelöscht');}// ── Tabelle rendern ────────────────────────────────────────────────────────function renderEntries() {    const tbody   = document.getElementById('entries-body');    const empty   = document.getElementById('empty-state');    const summary = document.getElementById('summary');    tbody.innerHTML = '';    if (entries.length === 0) {        empty.style.display = 'block';        summary.style.display = 'none';        return;    }    empty.style.display = 'none';    summary.style.display = 'flex';    let total = 0;    entries.forEach(e => {        total += e.hours;        const tr = document.createElement('tr');        tr.innerHTML =            '<td>' + new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE') + '</td>' +            '<td>' + fmtTime(parseTime(e.von)) + '</td>' +            '<td>' + fmtTime(parseTime(e.bis)) + '</td>' +            '<td><strong>' + fmtDec(e.hours) + ' Std.</strong></td>' +            '<td>' + e.taetigkeit + '</td>' +            '<td>' + e.ort + '</td>' +            '<td>' + (e.bemerkungen || '–') + '</td>' +            '<td><button class="delete-btn" onclick="deleteEntry(' + e.id + ')">✕</button></td>';        tbody.appendChild(tr);    });    document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';}// ── Export ─────────────────────────────────────────────────────────────────function exportData() {    const payload = {        entries,        customTaetigkeiten: JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]'),        customOrte:         JSON.parse(localStorage.getItem('hm-custom-orte') || '[]')    };    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });    const url  = URL.createObjectURL(blob);    const a    = document.createElement('a');    a.href     = url;    a.download = 'stundenerfassung_' + new Date().toISOString().slice(0,10) + '.json';    a.click();    URL.revokeObjectURL(url);    showToast('Exportiert ✓', 'success');}// ── Import ─────────────────────────────────────────────────────────────────function importData(event) {    const file = event.target.files[0];    if (!file) return;    const reader = new FileReader();    reader.onload = function(e) {        try {            const payload = JSON.parse(e.target.result);            if (!Array.isArray(payload.entries)) return showToast('Ungültige Datei');            const existingIds = new Set(entries.map(x => x.id));            const newEntries  = payload.entries.filter(x => !existingIds.has(x.id));            entries = [...entries, ...newEntries].sort((a,b) => a.datum.localeCompare(b.datum));            ['hm-custom-taetigkeiten','hm-custom-orte'].forEach((key, i) => {                const importedKey = i === 0 ? 'customTaetigkeiten' : 'customOrte';                const existing    = JSON.parse(localStorage.getItem(key) || '[]');                const merged      = [...new Set([...existing, ...(payload[importedKey] || [])])];                localStorage.setItem(key, JSON.stringify(merged));            });            persist();            loadCustomOptions();            renderEntries();            showToast(newEntries.length + ' neue Einträge importiert ✓', 'success');        } catch(err) {            showToast('Fehler beim Lesen der Datei');        }        event.target.value = '';    };    reader.readAsText(file);}// ── Dropdown-Erweiterung ───────────────────────────────────────────────────function openModal(type) {    modalType = type;    document.getElementById('modal-title').textContent =        type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';    document.getElementById('modal-input').placeholder =        type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';    document.getElementById('modal-input').value = '';    document.getElementById('modal').classList.add('active');    setTimeout(() => document.getElementById('modal-input').focus(), 50);}function closeModal() {    document.getElementById('modal').classList.remove('active');}function saveModalEntry() {    const val = document.getElementById('modal-input').value.trim();    if (!val) { showToast('Bitte einen Wert eingeben'); return; }    const select = document.getElementById(modalType);    if (Array.from(select.options).some(o => o.value === val)) {        showToast('Dieser Eintrag existiert bereits'); return;    }    select.add(new Option(val, val));    select.value = val;    const key = modalType === 'taetigkeit' ? 'hm-custom-taetigkeiten' : 'hm-custom-orte';    try {        const arr = JSON.parse(localStorage.getItem(key) || '[]');        arr.push(val);        localStorage.setItem(key, JSON.stringify(arr));    } catch(e) {}    closeModal();    showToast('Hinzugefügt ✓', 'success');}function loadCustomOptions() {    [['taetigkeit','hm-custom-taetigkeiten'],['ort','hm-custom-orte']].forEach(([id, key]) => {        try {            const arr = JSON.parse(localStorage.getItem(key) || '[]');            const sel = document.getElementById(id);            arr.forEach(v => {                if (!Array.from(sel.options).some(o => o.value === v)) {                    sel.add(new Option(v, v));                }            });        } catch(e) {}    });}// ── Persistenz ─────────────────────────────────────────────────────────────function persist() {    try { localStorage.setItem('hm-entries', JSON.stringify(entries)); } catch(e) {}}</script></body></html><!DOCTYPE html><html lang="de"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Stundenerfassung</title>    <meta name="apple-mobile-web-app-capable" content="yes">    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">    <meta name="apple-mobile-web-app-title" content="Stunden">    <meta name="theme-color" content="#667eea">    <link rel="manifest" id="manifest-link">    <style>        * { box-sizing: border-box; margin: 0; padding: 0; }        body {            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            min-height: 100vh;            padding: 20px;        }        .container { max-width: 1000px; margin: 0 auto; }        h1 {            color: white; text-align: center; margin-bottom: 24px;            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);        }        .card {            background: white; border-radius: 16px; padding: 24px;            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);        }        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }        .form-group { display: flex; flex-direction: column; }        .form-group.full-width { grid-column: 1 / -1; }        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }        input, select, textarea {            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;        }        input:focus, select:focus, textarea:focus {            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);        }        input.error, select.error {            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);        }        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }        .input-with-button { display: flex; gap: 8px; }        .input-with-button select { flex: 1; }        .add-btn {            background: #667eea; color: white; border: none; border-radius: 8px;            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;        }        .add-btn:hover { background: #5a6fd6; }        .install-banner {            background: linear-gradient(135deg, #2ed573, #17c0eb);            color: #222; border-radius: 12px; padding: 16px 20px;            margin-bottom: 20px; display: none;            align-items: center; justify-content: space-between; gap: 12px;        }        .install-banner.visible { display: flex; }        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }        .btn-install {            background: white; color: #333; border: none; padding: 10px 18px;            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;        }        .btn-dismiss {            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #444; flex-shrink: 0;        }        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }        .btn-export {            background: #2ed573; color: #222; border: none; padding: 12px 20px;            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;            display: flex; align-items: center; gap: 8px; transition: background 0.2s;        }        .btn-export:hover { background: #26c462; }        .btn-import {            background: #667eea; color: white; border: none; padding: 12px 20px;            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;            display: flex; align-items: center; gap: 8px; transition: background 0.2s;        }        .btn-import:hover { background: #5a6fd6; }        .toast {            position: fixed; bottom: 24px; left: 50%;            transform: translateX(-50%) translateY(80px);            background: #333; color: white; padding: 12px 24px;            border-radius: 30px; font-size: 0.95rem; z-index: 2000;            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;        }        .toast.error   { background: #ff4757; }        .toast.success { background: #2ed573; color: #222; }        .toast.show    { transform: translateX(-50%) translateY(0); }        .btn-primary {            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            color: white; border: none; padding: 14px 28px; border-radius: 8px;            font-size: 1rem; font-weight: 600; cursor: pointer;            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;        }        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }        .table-container { overflow-x: auto; }        table { width: 100%; border-collapse: collapse; margin-top: 8px; }        th {            background: #f8f9fa; padding: 12px; text-align: left;            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;        }        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }        tr:hover { background: #f8f9fa; }        .delete-btn {            background: #ff4757; color: white; border: none; padding: 6px 12px;            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;        }        .delete-btn:hover { background: #ff3344; }        .summary {            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;            display: flex; justify-content: space-between; align-items: center;        }        .summary-label { font-size: 1rem; opacity: 0.9; }        .summary-value { font-size: 2rem; font-weight: 700; }        .empty-state { text-align: center; padding: 40px; color: #999; }        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }        .modal {            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;        }        .modal.active { display: flex; }        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }        .modal-content h3 { margin-bottom: 16px; color: #333; }        .modal-content input { width: 100%; margin-bottom: 16px; }        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }        @media (max-width: 600px) {            .form-grid { grid-template-columns: 1fr; }            th, td { padding: 8px; font-size: 0.85rem; }            .sync-bar { flex-direction: column; align-items: stretch; }            .btn-export, .btn-import { justify-content: center; }            .install-banner { flex-wrap: wrap; }        }    </style></head><body><div class="container">    <h1>🔧 Stundenerfassung Hausmeister</h1>    <div class="install-banner" id="install-banner">        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>        <button class="btn-install" id="btn-install">Installieren</button>        <button class="btn-dismiss" id="btn-dismiss">✕</button>    </div>    <div class="card">        <h2>🔄 Daten übertragen (PC ↔ Handy)</h2>        <div class="sync-bar">            <p>Exportiere deine Daten als Datei und importiere sie auf dem anderen Gerät.</p>            <button class="btn-export" onclick="exportData()">⬇ Exportieren</button>            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Importieren</button>            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">        </div>    </div>    <div class="card">        <h2>📝 Neue Arbeitszeit erfassen</h2>        <div class="form-grid">            <div class="form-group">                <label for="datum">Datum</label>                <input type="date" id="datum">            </div>            <div class="form-group">                <label for="von">Von (z.B. 0800)</label>                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>            </div>            <div class="form-group">                <label for="bis">Bis (z.B. 1630)</label>                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>            </div>            <div class="form-group">                <label for="taetigkeit">Tätigkeit</label>                <div class="input-with-button">                    <select id="taetigkeit">                        <option value="">Bitte wählen…</option>                        <option>Reinigung</option>                        <option>Gartenarbeit</option>                        <option>Reparatur</option>                        <option>Winterdienst</option>                        <option>Müllentsorgung</option>                    </select>                    <button class="add-btn" onclick="openModal('taetigkeit')">+</button>                </div>            </div>            <div class="form-group">                <label for="ort">Beschäftigungsort</label>                <div class="input-with-button">                    <select id="ort">                        <option value="">Bitte wählen…</option>                        <option>Friedenrathstraße 7</option>                        <option>Brockesstraße 9</option>                        <option>Brockesstraße 9a</option>                        <option>Richard-Strauss-Straße 6</option>                    </select>                    <button class="add-btn" onclick="openModal('ort')">+</button>                </div>            </div>            <div class="form-group full-width">                <label for="bemerkungen">Bemerkungen</label>                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>            </div>        </div>        <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>    </div>    <div class="card">        <h2>📋 Erfasste Arbeitszeiten</h2>        <div class="table-container">            <table>                <thead>                    <tr>                        <th>Datum</th><th>Von</th><th>Bis</th><th>Stunden</th>                        <th>Tätigkeit</th><th>Ort</th><th>Bemerkung</th><th></th>                    </tr>                </thead>                <tbody id="entries-body"></tbody>            </table>            <div class="empty-state" id="empty-state">                <div class="empty-state-icon">📭</div>                <p>Noch keine Einträge vorhanden</p>            </div>        </div>        <div class="summary" id="summary" style="display:none;">            <span class="summary-label">Gesamtstunden diesen Monat</span>            <span class="summary-value" id="total-hours">0,00 Std.</span>        </div>    </div></div><div class="toast" id="toast"></div><div class="modal" id="modal">    <div class="modal-content">        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">        <div class="modal-buttons">            <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>            <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>        </div>    </div></div><script>// ── PWA Manifest ───────────────────────────────────────────────────────────const manifest = {    name: "Stundenerfassung Hausmeister",    short_name: "Stunden",    description: "Stundenerfassung für den Hausmeister",    start_url: "./",    display: "standalone",    background_color: "#667eea",    theme_color: "#667eea",    icons: [{        src: "data:image/svg+xml," + encodeURIComponent(            '<svg xmlns="[w3.org](http://www.w3.org/2000/svg)" viewBox="0 0 512 512">' +            '<rect width="512" height="512" rx="100" fill="#667eea"/>' +            '<text x="256" y="340" font-size="300" text-anchor="middle" fill="white">🔧</text>' +            '</svg>'        ),        sizes: "512x512",        type: "image/svg+xml",        purpose: "any maskable"    }]};const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);// ── Service Worker ─────────────────────────────────────────────────────────if ('serviceWorker' in navigator) {    const swCode = `        self.addEventListener('install', () => self.skipWaiting());        self.addEventListener('activate', () => self.clients.claim());        self.addEventListener('fetch', e => {            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));        });    `;    const swURL = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));    navigator.serviceWorker.register(swURL).catch(() => {});}// ── Install-Prompt ─────────────────────────────────────────────────────────let deferredPrompt = null;window.addEventListener('beforeinstallprompt', e => {    e.preventDefault();    deferredPrompt = e;    document.getElementById('install-banner').classList.add('visible');});document.getElementById('btn-install').addEventListener('click', async () => {    if (!deferredPrompt) return;    deferredPrompt.prompt();    const { outcome } = await deferredPrompt.userChoice;    if (outcome === 'accepted') showToast('App installiert ✓', 'success');    deferredPrompt = null;    document.getElementById('install-banner').classList.remove('visible');});document.getElementById('btn-dismiss').addEventListener('click', () => {    document.getElementById('install-banner').classList.remove('visible');});window.addEventListener('appinstalled', () => {    document.getElementById('install-banner').classList.remove('visible');});// ── State ──────────────────────────────────────────────────────────────────let entries = [];let modalType = '';try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }// ── Init ───────────────────────────────────────────────────────────────────document.getElementById('datum').valueAsDate = new Date();loadCustomOptions();renderEntries();document.getElementById('save-btn').addEventListener('click', addEntry);document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });// ── Toast ──────────────────────────────────────────────────────────────────let toastTimer;function showToast(msg, type = 'error') {    const t = document.getElementById('toast');    t.textContent = msg;    t.className = 'toast ' + type + ' show';    clearTimeout(toastTimer);    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);}// ── Feldmarkierung ─────────────────────────────────────────────────────────function markError(id) {    const el = document.getElementById(id);    el.classList.add('error');    el.addEventListener('input',  () => el.classList.remove('error'), { once: true });    el.addEventListener('change', () => el.classList.remove('error'), { once: true });}// ── Zeithelfer ─────────────────────────────────────────────────────────────function parseTime(s) {    s = String(s).trim();    if (!/^\d{4}$/.test(s)) return null;    const h = parseInt(s.slice(0,2), 10);    const m = parseInt(s.slice(2,4), 10);    if (h > 23 || m > 59) return null;    return { h, m };}function fmtTime(t) {    return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');}function calcHours(von, bis) {    const v = parseTime(von), b = parseTime(bis);    if (!v || !b) return 0;    let vMin = v.h * 60 + v.m, bMin = b.h * 60 + b.m;    if (bMin <= vMin) bMin += 1440;    return (bMin - vMin) / 60;}function fmtDec(n) { return n.toFixed(2).replace('.', ','); }// ── Eintrag speichern ──────────────────────────────────────────────────────function addEntry() {    const datum       = document.getElementById('datum').value;    const von         = document.getElementById('von').value.trim();    const bis         = document.getElementById('bis').value.trim();    const taetigkeit  = document.getElementById('taetigkeit').value;    const ort         = document.getElementById('ort').value;    const bemerkungen = document.getElementById('bemerkungen').value.trim();    if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }    if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }    if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }    if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }    if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }    entries.push({        id: Date.now(),        datum, von, bis,        hours: calcHours(von, bis),        taetigkeit, ort, bemerkungen    });    entries.sort((a, b) => a.datum.localeCompare(b.datum));    persist();    renderEntries();    showToast('Eintrag gespeichert ✓', 'success');    ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');    document.getElementById('taetigkeit').value = '';    document.getElementById('ort').value = '';}// ── Eintrag löschen ────────────────────────────────────────────────────────function deleteEntry(id) {    entries = entries.filter(e => e.id !== id);    persist();    renderEntries();    showToast('Eintrag gelöscht');}// ── Tabelle rendern ────────────────────────────────────────────────────────function renderEntries() {    const tbody   = document.getElementById('entries-body');    const empty   = document.getElementById('empty-state');    const summary = document.getElementById('summary');    tbody.innerHTML = '';    if (entries.length === 0) {        empty.style.display = 'block';        summary.style.display = 'none';        return;    }    empty.style.display = 'none';    summary.style.display = 'flex';    let total = 0;    entries.forEach(e => {        total += e.hours;        const tr = document.createElement('tr');        tr.innerHTML =            '<td>' + new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE') + '</td>' +            '<td>' + fmtTime(parseTime(e.von)) + '</td>' +            '<td>' + fmtTime(parseTime(e.bis)) + '</td>' +            '<td><strong>' + fmtDec(e.hours) + ' Std.</strong></td>' +            '<td>' + e.taetigkeit + '</td>' +            '<td>' + e.ort + '</td>' +            '<td>' + (e.bemerkungen || '–') + '</td>' +            '<td><button class="delete-btn" onclick="deleteEntry(' + e.id + ')">✕</button></td>';        tbody.appendChild(tr);    });    document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';}// ── Export ─────────────────────────────────────────────────────────────────function exportData() {    const payload = {        entries,        customTaetigkeiten: JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]'),        customOrte:         JSON.parse(localStorage.getItem('hm-custom-orte') || '[]')    };    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });    const url  = URL.createObjectURL(blob);    const a    = document.createElement('a');    a.href     = url;    a.download = 'stundenerfassung_' + new Date().toISOString().slice(0,10) + '.json';    a.click();    URL.revokeObjectURL(url);    showToast('Exportiert ✓', 'success');}// ── Import ─────────────────────────────────────────────────────────────────function importData(event) {    const file = event.target.files[0];    if (!file) return;    const reader = new FileReader();    reader.onload = function(e) {        try {            const payload = JSON.parse(e.target.result);            if (!Array.isArray(payload.entries)) return showToast('Ungültige Datei');            const existingIds = new Set(entries.map(x => x.id));            const newEntries  = payload.entries.filter(x => !existingIds.has(x.id));            entries = [...entries, ...newEntries].sort((a,b) => a.datum.localeCompare(b.datum));            ['hm-custom-taetigkeiten','hm-custom-orte'].forEach((key, i) => {                const importedKey = i === 0 ? 'customTaetigkeiten' : 'customOrte';                const existing    = JSON.parse(localStorage.getItem(key) || '[]');                const merged      = [...new Set([...existing, ...(payload[importedKey] || [])])];                localStorage.setItem(key, JSON.stringify(merged));            });            persist();            loadCustomOptions();            renderEntries();            showToast(newEntries.length + ' neue Einträge importiert ✓', 'success');        } catch(err) {            showToast('Fehler beim Lesen der Datei');        }        event.target.value = '';    };    reader.readAsText(file);}// ── Dropdown-Erweiterung ───────────────────────────────────────────────────function openModal(type) {    modalType = type;    document.getElementById('modal-title').textContent =        type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';    document.getElementById('modal-input').placeholder =        type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';    document.getElementById('modal-input').value = '';    document.getElementById('modal').classList.add('active');    setTimeout(() => document.getElementById('modal-input').focus(), 50);}function closeModal() {    document.getElementById('modal').classList.remove('active');}function saveModalEntry() {    const val = document.getElementById('modal-input').value.trim();    if (!val) { showToast('Bitte einen Wert eingeben'); return; }    const select = document.getElementById(modalType);    if (Array.from(select.options).some(o => o.value === val)) {        showToast('Dieser Eintrag existiert bereits'); return;    }    select.add(new Option(val, val));    select.value = val;    const key = modalType === 'taetigkeit' ? 'hm-custom-taetigkeiten' : 'hm-custom-orte';    try {        const arr = JSON.parse(localStorage.getItem(key) || '[]');        arr.push(val);        localStorage.setItem(key, JSON.stringify(arr));    } catch(e) {}    closeModal();    showToast('Hinzugefügt ✓', 'success');}function loadCustomOptions() {    [['taetigkeit','hm-custom-taetigkeiten'],['ort','hm-custom-orte']].forEach(([id, key]) => {        try {            const arr = JSON.parse(localStorage.getItem(key) || '[]');            const sel = document.getElementById(id);            arr.forEach(v => {                if (!Array.from(sel.options).some(o => o.value === v)) {                    sel.add(new Option(v, v));                }            });        } catch(e) {}    });}// ── Persistenz ─────────────────────────────────────────────────────────────function persist() {    try { loc*"Erstelle mir eine interaktive Single-Page-Web-App (als Artifact) für die Stundenerfassung eines Hausmeisters.
+
+Anforderungen:
+
+Eingabefelder: Datum, Von (Uhrzeit), Bis (Uhrzeit), Tätigkeit (Dropdown), Beschäftigungsort (Dropdown), Bemerkungen.  
+Schnelleingabe: Die Uhrzeiten sollen als 4-stellige Zahl ohne Doppelpunkt eingegeben werden (z.B. 0900 für 09:00, 1630 für 16:30). Die App soll daraus automatisch die Dezimalstunden berechnen (z.B. 8,50 Std.).  
+Dropdowns: Beschäftigungsorte sind Friedenrathstraße 7, Brockesstraße 9, Brockesstraße 9a, Richard-Strauss-Straße 6. Es soll eine einfache Möglichkeit geben, direkt in der App neue Tätigkeiten oder Orte zur Dropdown-Liste hinzuzufügen.  
+Speichern: Eingetragene Zeiten sollen in einer Tabelle darunter aufgelistet werden. Man muss Einträge auch wieder löschen können.  
+Gesamtsumme: Am Ende der Tabelle sollen alle Stunden des Monats automatisch zusammengezählt werden."*
+
+Stundenerfassung Hausmeister
+
+Hier ist die Web-App für die Stundenerfassung:
+html
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stundenerfassung</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Stunden">
-    <meta name="theme-color" content="#667eea">
-    <link rel="manifest" id="manifest-link">
+    <title>Stundenerfassung Hausmeister</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        .input-with-button {
+            display: flex;
+            gap: 8px;
+        }
+        .input-with-button select {
+            flex: 1;
+        }
+        .add-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 44px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            transition: background 0.2s;
+        }
+        .add-btn:hover {
+            background: #5a6fd6;
+        }
+        .time-hint {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 4px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .delete-btn:hover {
+            background: #ff3344;
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .summary-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-content h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        .modal-content input {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-save {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Stundenerfassung Hausmeister</h1>
+        <div class="card">
+            <h2>📝 Neue Arbeitszeit erfassen</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="datum">Datum</label>
+                    <input type="date" id="datum">
+                </div>
+                <div class="form-group">
+                    <label for="von">Von (z.B. 0800)</label>
+                    <input type="text" id="von" placeholder="0800" maxlength="4">
+                    <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+                </div>
+                <div class="form-group">
+                    <label for="bis">Bis (z.B. 1630)</label>
+                    <input type="text" id="bis" placeholder="1630" maxlength="4">
+                    <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+                </div>
+                <div class="form-group">
+                    <label for="taetigkeit">Tätigkeit</label>
+                    <div class="input-with-button">
+                        <select id="taetigkeit">
+                            <option value="">Bitte wählen...</option>
+                            <option value="Reinigung">Reinigung</option>
+                            <option value="Gartenarbeit">Gartenarbeit</option>
+                            <option value="Reparatur">Reparatur</option>
+                            <option value="Winterdienst">Winterdienst</option>
+                            <option value="Müllentsorgung">Müllentsorgung</option>
+                        </select>
+                        <button class="add-btn" onclick="openModal('taetigkeit')" title="Neue Tätigkeit hinzufügen">+</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ort">Beschäftigungsort</label>
+                    <div class="input-with-button">
+                        <select id="ort">
+                            <option value="">Bitte wählen...</option>
+                            <option value="Friedenrathstraße 7">Friedenrathstraße 7</option>
+                            <option value="Brockesstraße 9">Brockesstraße 9</option>
+                            <option value="Brockesstraße 9a">Brockesstraße 9a</option>
+                            <option value="Richard-Strauss-Straße 6">Richard-Strauss-Straße 6</option>
+                        </select>
+                        <button class="add-btn" onclick="openModal('ort')" title="Neuen Ort hinzufügen">+</button>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="bemerkungen">Bemerkungen</label>
+                    <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen..."></textarea>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="addEntry()">✓ Eintrag speichern</button>
+        </div>
+        <div class="card">
+            <h2>📋 Erfasste Arbeitszeiten</h2>
+            <div class="table-container">
+                <table id="entries-table">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Von</th>
+                            <th>Bis</th>
+                            <th>Stunden</th>
+                            <th>Tätigkeit</th>
+                            <th>Ort</th>
+                            <th>Bemerkung</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="entries-body">
+                    </tbody>
+                </table>
+                <div class="empty-state" id="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>Noch keine Einträge vorhanden</p>
+                </div>
+            </div>
+            <div class="summary" id="summary" style="display: none;">
+                <span class="summary-label">Gesamtstunden diesen Monat</span>
+                <span class="summary-value" id="total-hours">0,00 Std.</span>
+            </div>
+        </div>
+    </div>
+    <!-- Modal für neue Einträge -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
+            <input type="text" id="modal-input" placeholder="Bezeichnung eingeben...">
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+                <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let entries = JSON.parse(localStorage.getItem('hausmeister-entries') || '[]');
+        let modalType = '';
+        // Beim Laden
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('datum').valueAsDate = new Date();
+            loadCustomOptions();
+            renderEntries();
+        });
+        // Benutzerdefinierte Dropdown-Optionen laden
+        function loadCustomOptions() {
+            const customTaetigkeiten = JSON.parse(localStorage.getItem('custom-taetigkeiten') || '[]');
+            const customOrte = JSON.parse(localStorage.getItem('custom-orte') || '[]');
+            const taetigkeitSelect = document.getElementById('taetigkeit');
+            customTaetigkeiten.forEach(t => {
+                if (!Array.from(taetigkeitSelect.options).some(o => o.value === t)) {
+                    const option = new Option(t, t);
+                    taetigkeitSelect.add(option);
+                }
+            });
+            const ortSelect = document.getElementById('ort');
+            customOrte.forEach(o => {
+                if (!Array.from(ortSelect.options).some(opt => opt.value === o)) {
+                    const option = new Option(o, o);
+                    ortSelect.add(option);
+                }
+            });
+        }
+        // Zeit parsen (z.B. "0830" -> { hours: 8, minutes: 30 })
+        function parseTime(timeStr) {
+            if (!/^\d{4}$/.test(timeStr)) return null;
+            const hours = parseInt(timeStr.substring(0, 2));
+            const minutes = parseInt(timeStr.substring(2, 4));
+            if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+            return { hours, minutes };
+        }
+        // Zeit formatieren (z.B. { hours: 8, minutes: 30 } -> "08:30")
+        function formatTime(timeObj) {
+            return `${String(timeObj.hours).padStart(2, '0')}:${String(timeObj.minutes).padStart(2, '0')}`;
+        }
+        // Dezimalstunden berechnen
+        function calculateHours(von, bis) {
+            const vonTime = parseTime(von);
+            const bisTime = parseTime(bis);
+            if (!vonTime || !bisTime) return 0;
+            let vonMinutes = vonTime.hours * 60 + vonTime.minutes;
+            let bisMinutes = bisTime.hours * 60 + bisTime.minutes;
+            // Falls bis vor von liegt (Nachtarbeit)
+            if (bisMinutes < vonMinutes) {
+                bisMinutes += 24 * 60;
+            }
+            const diffMinutes = bisMinutes - vonMinutes;
+            return diffMinutes / 60;
+        }
+        // Dezimalzahl formatieren (deutsch)
+        function formatDecimal(num) {
+            return num.toFixed(2).replace('.', ',');
+        }
+        // Eintrag hinzufügen
+        function addEntry() {
+            const datum = document.getElementById('datum').value;
+            const von = document.getElementById('von').value;
+            const bis = document.getElementById('bis').value;
+            const taetigkeit = document.getElementById('taetigkeit').value;
+            const ort = document.getElementById('ort').value;
+            const bemerkungen = document.getElementById('bemerkungen').value;
+            // Validierung
+            if (!datum) return alert('Bitte Datum eingeben');
+            if (!parseTime(von)) return alert('Bitte gültige Startzeit eingeben (z.B. 0800)');
+            if (!parseTime(bis)) return alert('Bitte gültige Endzeit eingeben (z.B. 1630)');
+            if (!taetigkeit) return alert('Bitte Tätigkeit auswählen');
+            if (!ort) return alert('Bitte Beschäftigungsort auswählen');
+            const hours = calculateHours(von, bis);
+            
+            entries.push({
+                id: Date.now(),
+                datum,
+                von,
+                bis,
+                hours,
+                taetigkeit,
+                ort,
+                bemerkungen
+            });
+            // Nach Datum sortieren
+            entries.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+            localStorage.setItem('hausmeister-entries', JSON.stringify(entries));
+            renderEntries();
+            // Formular zurücksetzen (außer Datum)
+            document.getElementById('von').value = '';
+            document.getElementById('bis').value = '';
+            document.getElementById('taetigkeit').value = '';
+            document.getElementById('ort').value = '';
+            document.getElementById('bemerkungen').value = '';
+        }
+        // Eintrag löschen
+        function deleteEntry(id) {
+            if (!confirm('Eintrag wirklich löschen?')) return;
+            entries = entries.filter(e => e.id !== id);
+            localStorage.setItem('hausmeister-entries', JSON.stringify(entries));
+            renderEntries();
+        }
+        // Einträge rendern
+        function renderEntries() {
+            const tbody = document.getElementById('entries-body');
+            const emptyState = document.getElementById('empty-state');
+            const summary = document.getElementById('summary');
+            tbody.innerHTML = '';
+            if (entries.length === 0) {
+                emptyState.style.display = 'block';
+                summary.style.display = 'none';
+                return;
+            }
+            emptyState.style.display = 'none';
+            summary.style.display = 'flex';
+            let totalHours = 0;
+            entries.forEach(entry => {
+                totalHours += entry.hours;
+                const vonFormatted = formatTime(parseTime(entry.von));
+                const bisFormatted = formatTime(parseTime(entry.bis));
+                const datumFormatted = new Date(entry.datum).toLocaleDateString('de-DE');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${datumFormatted}</td>
+                    <td>${vonFormatted}</td>
+                    <td>${bisFormatted}</td>
+                    <td><strong>${formatDecimal(entry.hours)} Std.</strong></td>
+                    <td>${entry.taetigkeit}</td>
+                    <td>${entry.ort}</td>
+                    <td>${entry.bemerkungen || '-'}</td>
+                    <td><button class="delete-btn" onclick="deleteEntry(${entry.id})">✕</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('total-hours').textContent = `${formatDecimal(totalHours)} Std.`;
+        }
+        // Modal öffnen
+        function openModal(type) {
+            modalType = type;
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const input = document.getElementById('modal-input');
+            title.textContent = type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
+            input.placeholder = type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
+            input.value = '';
+            modal.classList.add('active');
+            input.focus();
+        }
+        // Modal schließen
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        // Modal-Eintrag speichern
+        function saveModalEntry() {
+            const input = document.getElementById('modal-input');
+            const value = input.value.trim();
+            if (!value) return alert('Bitte einen Wert eingeben');
+            const select = document.getElementById(modalType);
+            const storageKey = modalType === 'taetigkeit' ? 'custom-taetigkeiten' : 'custom-orte';
+            // Prüfen ob bereits vorhanden
+            if (Array.from(select.options).some(o => o.value === value)) {
+                return alert('Dieser Eintrag existiert bereits');
+            }
+            // Zur Dropdown hinzufügen
+            const option = new Option(value, value);
+            select.add(option);
+            select.value = value;
+            // Im localStorage speichern
+            const customEntries = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            customEntries.push(value);
+            localStorage.setItem(storageKey, JSON.stringify(customEntries));
+            closeModal();
+        }
+        // Enter-Taste im Modal
+        document.getElementById('modal-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveModalEntry();
+        });
+        // Modal schließen bei Klick außerhalb
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+    </script>
+</body>
+</html>
+
+Funktionen der App:
+
+    Schnelleingabe der Uhrzeiten – Einfach 4 Ziffern ohne Doppelpunkt eingeben (z.B. 0830 für 08:30). Die Dezimalstunden werden automatisch berechnet.
+
+    Dropdowns erweiterbar – Über den +-Button neben den Dropdowns kannst du neue Tätigkeiten oder Orte hinzufügen. Diese werden im Browser gespeichert und bleiben erhalten.
+
+    Datenpersistenz – Alle Einträge werden im localStorage des Browsers gespeichert, sodass sie auch nach dem Neuladen verfügbar sind.
+
+    Gesamtsumme – Am Ende der Tabelle wird die Summe aller erfassten Stunden angezeigt.
+
+    Löschen – Jeder Eintrag kann über das rote ✕ gelöscht werden (mit Bestätigung).
+
+wie bekomme ich die app auf mein iphone?
+
+Es gibt ein paar einfache Wege, je nachdem wie viel Aufwand du willst:
+Option 1: Als Website speichern (einfachste Lösung)
+
+Das ist der schnellste Weg – keine App-Installation nötig.
+
+    Speichere den HTML-Code als Datei (z.B. stundenerfassung.html) auf deinem Computer
+    Lade die Datei irgendwo hoch, wo du per URL drauf zugreifen kannst – z.B.:
+        Google Drive → Datei hochladen → Link kopieren
+        Dropbox → In Public-Ordner legen
+        GitHub Gist → als .html anlegen, dann über öffnen
+    Auf dem iPhone diesen Link in Safari öffnen
+    Unten auf „Teilen" (das Kästchen-mit-Pfeil-Symbol) tippen
+    „Zum Home-Bildschirm" wählen → die App erscheint wie eine echte App auf deinem Homescreen
+
+    ⚠️ Der localStorage (gespeicherte Daten) funktioniert nur in Safari, nicht in anderen Browsern auf dem iPhone.
+
+Option 2: Lokale HTML-Datei direkt öffnen
+
+    Schicke dir die stundenerfassung.html per AirDrop oder iCloud Drive
+    Auf dem iPhone in der Dateien-App öffnen → tippt man drauf, öffnet sie sich in Safari
+    Von dort aus wieder „Zum Home-Bildschirm" hinzufügen (wie oben)
+
+Option 3: Codepen oder ähnliches (ohne eigenen Server)
+
+    Gehe auf am Computer
+    Neues Pen anlegen → den HTML-Code einfügen
+    Auf „Save" → dann die URL auf dem iPhone in Safari öffnen
+    Wieder als Homescreen-App speichern
+
+Empfehlung für deinen Fall: Option 2 über AirDrop/iCloud ist am schnellsten. Option 1 mit GitHub Gist ist am praktischsten, wenn du die App auch auf mehreren Geräten nutzen willst.
+
+Der Homescreen-Icon sieht dann genauso aus wie eine echte App – du merkst keinen Unterschied beim Öffnen.
+
+Der Button "Eintrag speichern" funktioniert noch nicht
+
+Das Problem liegt höchstwahrscheinlich daran, dass alert() in eingebetteten Umgebungen (wie einem Artifact-Viewer) blockiert ist. Ich ersetze alle alert()-Aufrufe durch eine eigene Fehlermeldung im UI – das macht die App außerdem schöner.
+
+Hier die korrigierte Version:
+html
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stundenerfassung Hausmeister</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -19,150 +605,736 @@
         }
         .container { max-width: 1000px; margin: 0 auto; }
         h1 {
-            color: white; text-align: center; margin-bottom: 24px;
-            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            color: white;
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .card {
-            background: white; border-radius: 16px; padding: 24px;
-            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
         .form-group { display: flex; flex-direction: column; }
         .form-group.full-width { grid-column: 1 / -1; }
-        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }
+        label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
         input, select, textarea {
-            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;
-            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: white;
         }
         input:focus, select:focus, textarea:focus {
-            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
         }
         input.error, select.error {
-            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
+            border-color: #ff4757;
+            box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
         }
-        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
+        .time-hint {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 4px;
+        }
         .input-with-button { display: flex; gap: 8px; }
         .input-with-button select { flex: 1; }
         .add-btn {
-            background: #667eea; color: white; border: none; border-radius: 8px;
-            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;
-        }
-        .add-btn:hover { background: #5a6fd6; }
-
-        /* Install-Banner */
-        .install-banner {
-            background: linear-gradient(135deg, #2ed573, #17c0eb);
-            color: #222; border-radius: 12px; padding: 16px 20px;
-            margin-bottom: 20px; display: none;
-            align-items: center; justify-content: space-between; gap: 12px;
-        }
-        .install-banner.visible { display: flex; }
-        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }
-        .btn-install {
-            background: white; color: #333; border: none; padding: 10px 18px;
-            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 44px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            transition: background 0.2s;
             flex-shrink: 0;
         }
-        .btn-dismiss {
-            background: none; border: none; font-size: 1.2rem; cursor: pointer;
-            color: #444; flex-shrink: 0;
-        }
-
-        /* Sync */
-        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }
-        .btn-export {
-            background: #2ed573; color: #222; border: none; padding: 12px 20px;
-            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
-        }
-        .btn-export:hover { background: #26c462; }
-        .btn-import {
-            background: #667eea; color: white; border: none; padding: 12px 20px;
-            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
-        }
-        .btn-import:hover { background: #5a6fd6; }
-
-        /* Toast */
+        .add-btn:hover { background: #5a6fd6; }
+        /* Toast-Benachrichtigung */
         .toast {
-            position: fixed; bottom: 24px; left: 50%;
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
             transform: translateX(-50%) translateY(80px);
-            background: #333; color: white; padding: 12px 24px;
-            border-radius: 30px; font-size: 0.95rem; z-index: 2000;
-            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+            white-space: nowrap;
         }
-        .toast.error   { background: #ff4757; }
+        .toast.error { background: #ff4757; }
         .toast.success { background: #2ed573; color: #222; }
-        .toast.show    { transform: translateX(-50%) translateY(0); }
-
+        .toast.show { transform: translateX(-50%) translateY(0); }
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; padding: 14px 28px; border-radius: 8px;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 12px;
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
-
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th {
-            background: #f8f9fa; padding: 12px; text-align: left;
-            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
         }
-        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
         tr:hover { background: #f8f9fa; }
         .delete-btn {
-            background: #ff4757; color: white; border: none; padding: 6px 12px;
-            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
         }
         .delete-btn:hover { background: #ff3344; }
         .summary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;
-            display: flex; justify-content: space-between; align-items: center;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .summary-label { font-size: 1rem; opacity: 0.9; }
         .summary-value { font-size: 2rem; font-weight: 700; }
         .empty-state { text-align: center; padding: 40px; color: #999; }
         .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
-
         /* Modal */
         .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+        }
         .modal-content h3 { margin-bottom: 16px; color: #333; }
         .modal-content input { width: 100%; margin-bottom: 16px; }
         .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
-        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-save {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔧 Stundenerfassung Hausmeister</h1>
+    <div class="card">
+        <h2>📝 Neue Arbeitszeit erfassen</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="datum">Datum</label>
+                <input type="date" id="datum">
+            </div>
+            <div class="form-group">
+                <label for="von">Von (z.B. 0800)</label>
+                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="bis">Bis (z.B. 1630)</label>
+                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="taetigkeit">Tätigkeit</label>
+                <div class="input-with-button">
+                    <select id="taetigkeit">
+                        <option value="">Bitte wählen…</option>
+                        <option>Reinigung</option>
+                        <option>Gartenarbeit</option>
+                        <option>Reparatur</option>
+                        <option>Winterdienst</option>
+                        <option>Müllentsorgung</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('taetigkeit')" title="Neue Tätigkeit">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ort">Beschäftigungsort</label>
+                <div class="input-with-button">
+                    <select id="ort">
+                        <option value="">Bitte wählen…</option>
+                        <option>Friedenrathstraße 7</option>
+                        <option>Brockesstraße 9</option>
+                        <option>Brockesstraße 9a</option>
+                        <option>Richard-Strauss-Straße 6</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('ort')" title="Neuen Ort">+</button>
+                </div>
+            </div>
+            <div class="form-group full-width">
+                <label for="bemerkungen">Bemerkungen</label>
+                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>
+            </div>
+        </div>
+        <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>
+    </div>
+    <div class="card">
+        <h2>📋 Erfasste Arbeitszeiten</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Von</th>
+                        <th>Bis</th>
+                        <th>Stunden</th>
+                        <th>Tätigkeit</th>
+                        <th>Ort</th>
+                        <th>Bemerkung</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="entries-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Noch keine Einträge vorhanden</p>
+            </div>
+        </div>
+        <div class="summary" id="summary" style="display:none;">
+            <span class="summary-label">Gesamtstunden diesen Monat</span>
+            <span class="summary-value" id="total-hours">0,00 Std.</span>
+        </div>
+    </div>
+</div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<!-- Modal -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
+        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+            <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>
+        </div>
+    </div>
+</div>
+<script>
+    // ── State ──────────────────────────────────────────────────────────
+    let entries = [];
+    let modalType = '';
+    try {
+        entries = JSON.parse(localStorage.getItem('hm-entries') || '[]');
+    } catch(e) { entries = []; }
+    // ── Init ───────────────────────────────────────────────────────────
+    document.getElementById('datum').valueAsDate = new Date();
+    loadCustomOptions();
+    renderEntries();
+    document.getElementById('save-btn').addEventListener('click', addEntry);
+    document.getElementById('modal-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') saveModalEntry();
+    });
+    document.getElementById('modal').addEventListener('click', e => {
+        if (e.target.id === 'modal') closeModal();
+    });
+    // ── Toast ──────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, type = 'error') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
+    }
+    // ── Feldmarkierung ─────────────────────────────────────────────────
+    function markError(id) {
+        const el = document.getElementById(id);
+        el.classList.add('error');
+        el.addEventListener('input', () => el.classList.remove('error'), { once: true });
+        el.addEventListener('change', () => el.classList.remove('error'), { once: true });
+    }
+    // ── Zeithelfer ─────────────────────────────────────────────────────
+    function parseTime(s) {
+        s = s.trim();
+        if (!/^\d{4}$/.test(s)) return null;
+        const h = parseInt(s.slice(0, 2), 10);
+        const m = parseInt(s.slice(2, 4), 10);
+        if (h > 23 || m > 59) return null;
+        return { h, m };
+    }
+    function fmtTime(t) {
+        return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+    }
+    function calcHours(von, bis) {
+        const v = parseTime(von), b = parseTime(bis);
+        if (!v || !b) return 0;
+        let vMin = v.h * 60 + v.m;
+        let bMin = b.h * 60 + b.m;
+        if (bMin <= vMin) bMin += 24 * 60; // Nachtschicht
+        return (bMin - vMin) / 60;
+    }
+    function fmtDec(n) {
+        return n.toFixed(2).replace('.', ',');
+    }
+    // ── Eintrag speichern ──────────────────────────────────────────────
+    function addEntry() {
+        const datum      = document.getElementById('datum').value;
+        const von        = document.getElementById('von').value.trim();
+        const bis        = document.getElementById('bis').value.trim();
+        const taetigkeit = document.getElementById('taetigkeit').value;
+        const ort        = document.getElementById('ort').value;
+        const bemerkungen = document.getElementById('bemerkungen').value.trim();
+        // Validierung
+        if (!datum)           { markError('datum');      return showToast('Bitte Datum auswählen'); }
+        if (!parseTime(von))  { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }
+        if (!parseTime(bis))  { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }
+        if (!taetigkeit)      { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }
+        if (!ort)             { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }
+        const hours = calcHours(von, bis);
+        entries.push({ id: Date.now(), datum, von, bis, hours, taetigkeit, ort, bemerkungen });
+        entries.sort((a, b) => a.datum.localeCompare(b.datum));
+        persist();
+        renderEntries();
+        showToast('Eintrag gespeichert ✓', 'success');
+        // Formular leeren (Datum bleibt)
+        ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('taetigkeit').value = '';
+        document.getElementById('ort').value = '';
+    }
+    // ── Eintrag löschen ────────────────────────────────────────────────
+    function deleteEntry(id) {
+        entries = entries.filter(e => e.id !== id);
+        persist();
+        renderEntries();
+        showToast('Eintrag gelöscht', 'error');
+    }
+    // ── Tabelle rendern ────────────────────────────────────────────────
+    function renderEntries() {
+        const tbody  = document.getElementById('entries-body');
+        const empty  = document.getElementById('empty-state');
+        const summary = document.getElementById('summary');
+        tbody.innerHTML = '';
+        if (entries.length === 0) {
+            empty.style.display  = 'block';
+            summary.style.display = 'none';
+            return;
+        }
+        empty.style.display  = 'none';
+        summary.style.display = 'flex';
+        let total = 0;
+        entries.forEach(e => {
+            total += e.hours;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE')}</td>
+                <td>${fmtTime(parseTime(e.von))}</td>
+                <td>${fmtTime(parseTime(e.bis))}</td>
+                <td><strong>${fmtDec(e.hours)} Std.</strong></td>
+                <td>${e.taetigkeit}</td>
+                <td>${e.ort}</td>
+                <td>${e.bemerkungen || '–'}</td>
+                <td><button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
+    }
+    // ── Dropdown-Erweiterung ───────────────────────────────────────────
+    function openModal(type) {
+        modalType = type;
+        document.getElementById('modal-title').textContent =
+            type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
+        document.getElementById('modal-input').placeholder =
+            type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
+        document.getElementById('modal-input').value = '';
+        document.getElementById('modal').classList.add('active');
+        setTimeout(() => document.getElementById('modal-input').focus(), 50);
+    }
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
+    function saveModalEntry() {
+        const val = document.getElementById('modal-input').value.trim();
+        if (!val) { showToast('Bitte einen Wert eingeben'); return; }
+        const select = document.getElementById(modalType);
+        if (Array.from(select.options).some(o => o.value === val)) {
+            showToast('Dieser Eintrag existiert bereits');
+            return;
+        }
+        const opt = new Option(val, val);
+        select.add(opt);
+        select.value = val;
+        const key = modalType === 'taetigkeit' ? 'hm-custom-taetigkeiten' : 'hm-custom-orte';
+        try {
+            const arr = JSON.parse(localStorage.getItem(key) || '[]');
+            arr.push(val);
+            localStorage.setItem(key, JSON.stringify(arr));
+        } catch(e) {}
+        closeModal();
+        showToast('Hinzugefügt ✓', 'success');
+    }
+    function loadCustomOptions() {
+        [['taetigkeit','hm-custom-taetigkeiten'],['ort','hm-custom-orte']].forEach(([id, key]) => {
+            try {
+                const arr = JSON.parse(localStorage.getItem(key) || '[]');
+                const sel = document.getElementById(id);
+                arr.forEach(v => {
+                    if (!Array.from(sel.options).some(o => o.value === v)) sel.add(new Option(v, v));
+                });
+            } catch(e) {}
+        });
+    }
+    // ── Persistenz ─────────────────────────────────────────────────────
+    function persist() {
+        try { localStorage.setItem('hm-entries', JSON.stringify(entries)); } catch(e) {}
+    }
+</script>
+</body>
+</html>
 
+Was ich geändert habe:
+
+    Kein alert() mehr – stattdessen erscheint ein farbiger Toast am unteren Bildschirmrand (rot bei Fehler, grün bei Erfolg). Das ist der Hauptgrund warum der Button vorher nichts tat.
+    Fehlerfelder werden rot markiert – man sieht sofort welches Feld fehlt.
+    inputmode="numeric" auf den Zeitfeldern – auf dem iPhone öffnet sich automatisch die Zifferntastatur.
+    Datums-Timezone-Fix – Datum wird jetzt korrekt angezeigt (kein Off-by-one-Tag mehr).
+
+ich kann die erfassten Arbeitszeiten auf dem Handy nicht sehen aber auf der Anwendung auf dem PC
+
+Das ist ein klassisches localStorage-Problem: Jede Umgebung (PC-Browser, iPhone-Safari, Chrome auf dem Handy) hat ihren eigenen, getrennten localStorage. Daten die du auf dem PC eingibst, sind auf dem Handy schlicht nicht vorhanden – und umgekehrt.
+Die Ursache
+
+localStorage ist lokal pro Gerät und Browser – kein Sync, keine Cloud.
+Lösung: Daten exportieren & importieren
+
+Der einfachste Weg ohne Server ist ein Export/Import per JSON-Datei. Ich baue dir das direkt in die App ein:
+
+    PC → Handy: Auf dem PC exportieren → Datei per AirDrop/iCloud/WhatsApp ans Handy schicken → auf dem Handy importieren
+    Handy → PC: Genauso in die andere Richtung
+
+Hier die aktualisierte App mit Export- und Import-Button:
+html
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stundenerfassung Hausmeister</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: white;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        input.error, select.error {
+            border-color: #ff4757;
+            box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
+        }
+        .time-hint {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 4px;
+        }
+        .input-with-button { display: flex; gap: 8px; }
+        .input-with-button select { flex: 1; }
+        .add-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 44px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .add-btn:hover { background: #5a6fd6; }
+        /* Sync-Bereich */
+        .sync-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .sync-bar p {
+            font-size: 0.85rem;
+            color: #888;
+            flex: 1 1 100%;
+            margin-bottom: 4px;
+        }
+        .btn-export {
+            background: #2ed573;
+            color: #222;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-export:hover { background: #26c462; }
+        .btn-import {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-import:hover { background: #5a6fd6; }
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .toast.error   { background: #ff4757; }
+        .toast.success { background: #2ed573; color: #222; }
+        .toast.show    { transform: translateX(-50%) translateY(0); }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 12px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
+        tr:hover { background: #f8f9fa; }
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .delete-btn:hover { background: #ff3344; }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .summary-label { font-size: 1rem; opacity: 0.9; }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-content h3 { margin-bottom: 16px; color: #333; }
+        .modal-content input { width: 100%; margin-bottom: 16px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-save {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
         @media (max-width: 600px) {
             .form-grid { grid-template-columns: 1fr; }
             th, td { padding: 8px; font-size: 0.85rem; }
             .sync-bar { flex-direction: column; align-items: stretch; }
             .btn-export, .btn-import { justify-content: center; }
-            .install-banner { flex-wrap: wrap; }
         }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h1>🔧 Stundenerfassung Hausmeister</h1>
-
-    <!-- Install-Banner (erscheint automatisch wenn installierbar) -->
-    <div class="install-banner" id="install-banner">
-        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>
-        <button class="btn-install" id="btn-install">Installieren</button>
-        <button class="btn-dismiss" id="btn-dismiss" title="Schließen">✕</button>
-    </div>
-
-    <!-- SYNC -->
+    <!-- SYNC-KARTE -->
     <div class="card">
         <h2>🔄 Daten übertragen (PC ↔ Handy)</h2>
         <div class="sync-bar">
@@ -172,7 +1344,6 @@
             <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
         </div>
     </div>
-
     <!-- ERFASSUNG -->
     <div class="card">
         <h2>📝 Neue Arbeitszeit erfassen</h2>
@@ -225,7 +1396,508 @@
         </div>
         <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>
     </div>
+    <!-- TABELLE -->
+    <div class="card">
+        <h2>📋 Erfasste Arbeitszeiten</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Von</th>
+                        <th>Bis</th>
+                        <th>Stunden</th>
+                        <th>Tätigkeit</th>
+                        <th>Ort</th>
+                        <th>Bemerkung</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="entries-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Noch keine Einträge vorhanden</p>
+            </div>
+        </div>
+        <div class="summary" id="summary" style="display:none;">
+            <span class="summary-label">Gesamtstunden diesen Monat</span>
+            <span class="summary-value" id="total-hours">0,00 Std.</span>
+        </div>
+    </div>
+</div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<!-- Modal -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
+        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+            <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>
+        </div>
+    </div>
+</div>
+<script>
+    // ── State ──────────────────────────────────────────────────────────
+    let entries = [];
+    let modalType = '';
+    try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }
+    // ── Init ───────────────────────────────────────────────────────────
+    document.getElementById('datum').valueAsDate = new Date();
+    loadCustomOptions();
+    renderEntries();
+    document.getElementById('save-btn').addEventListener('click', addEntry);
+    document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });
+    document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    // ── Toast ──────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, type = 'error') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+    }
+    // ── Feldmarkierung ─────────────────────────────────────────────────
+    function markError(id) {
+        const el = document.getElementById(id);
+        el.classList.add('error');
+        el.addEventListener('input',  () => el.classList.remove('error'), { once: true });
+        el.addEventListener('change', () => el.classList.remove('error'), { once: true });
+    }
+    // ── Zeithelfer ─────────────────────────────────────────────────────
+    function parseTime(s) {
+        s = String(s).trim();
+        if (!/^\d{4}$/.test(s)) return null;
+        const h = parseInt(s.slice(0,2), 10);
+        const m = parseInt(s.slice(2,4), 10);
+        if (h > 23 || m > 59) return null;
+        return { h, m };
+    }
+    function fmtTime(t) {
+        return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+    }
+    function calcHours(von, bis) {
+        const v = parseTime(von), b = parseTime(bis);
+        if (!v || !b) return 0;
+        let vMin = v.h * 60 + v.m;
+        let bMin = b.h * 60 + b.m;
+        if (bMin <= vMin) bMin += 24 * 60;
+        return (bMin - vMin) / 60;
+    }
+    function fmtDec(n) { return n.toFixed(2).replace('.', ','); }
+    // ── Eintrag speichern ──────────────────────────────────────────────
+    function addEntry() {
+        const datum       = document.getElementById('datum').value;
+        const von         = document.getElementById('von').value.trim();
+        const bis         = document.getElementById('bis').value.trim();
+        const taetigkeit  = document.getElementById('taetigkeit').value;
+        const ort         = document.getElementById('ort').value;
+        const bemerkungen = document.getElementById('bemerkungen').value.trim();
+        if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }
+        if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }
+        if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }
+        if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }
+        if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }
+        entries.push({ id: Date.now(), datum, von, bis, hours: calcHours(von, bis), taetigkeit, ort, bemerkungen });
+        entries.sort((a, b) => a.datum.localeCompare(b.datum));
+        persist();
+        renderEntries();
+        showToast('Eintrag gespeichert ✓', 'success');
+        ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('taetigkeit').value = '';
+        document.getElementById('ort').value = '';
+    }
+    // ── Eintrag löschen ────────────────────────────────────────────────
+    function deleteEntry(id) {
+        entries = entries.filter(e => e.id !== id);
+        persist();
+        renderEntries();
+        showToast('Eintrag gelöscht');
+    }
+    // ── Tabelle rendern ────────────────────────────────────────────────
+    function renderEntries() {
+        const tbody   = document.getElementById('entries-body');
+        const empty   = document.getElementById('empty-state');
+        const summary = document.getElementById('summary');
+        tbody.innerHTML = '';
+        if (entries.length === 0) {
+            empty.style.display   = 'block';
+            summary.style.display = 'none';
+            return;
+        }
+        empty.style.display   = 'none';
+        summary.style.display = 'flex';
+        let total = 0;
+        entries.forEach(e => {
+            total += e.hours;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE')}</td>
+                <td>${fmtTime(parseTime(e.von))}</td>
+                <td>${fmtTime(parseTime(e.bis))}</td>
+                <td><strong>${fmtDec(e.hours)} Std.</strong></td>
+                <td>${e.taetigkeit}</td>
+                <td>${e.ort}</td>
+                <td>${e.bemerkungen || '–'}</td>
+                <td><button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
+    }
+    // ── Export ─────────────────────────────────────────────────────────
+    function exportData() {
+        const customTaetigkeiten = JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]');
+        const customOrte         = JSON.parse(localStorage.getItem('hm-custom-orte') || '[]');
+        const payload = { entries, customTaetigkeiten, customOrte };
+        const blob    = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url     = URL.createObjectURL(blob);
+        const today = new Date().toISOString().slice(0,10);
+        const a     = document.createElement('a');
+        a.href      = url;
+        a.download  = `stundenerfassung_${today}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Exportiert ✓ – Datei ans Handy schicken', 'success');
+    }
+    // ── Import ─────────────────────────────────────────────────────────
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const payload = JSON.parse(e.target.result);
+                if (!Array.isArray(payload.entries)) {
+                    return showToast('Ungültige Datei – bitte nur exportierte Dateien importieren');
+                }
+                // Einträge zusammenführen (keine Duplikate anhand ID)
+                const existingIds = new Set(entries.map(x => x.id));
+                const newEntries  = payload.entries.filter(x => !existingIds.has(x.id));
+                entries = [...entries, ...newEntries].sort((a,b) => a.datum.localeCompare(b.datum));
+                // Custom-Dropdowns zusammenführen
+                ['hm-custom-taetigkeiten', 'hm-custom-orte'].forEach((key, i) => {
+                    const importedKey = i === 0 ? 'customTaetigkeiten' : 'customOrte';
+                    const existing    = JSON.parse(localStorage.getItem(key) || '[]');
+                    const merged      = [...new Set([...existing, ...(payload[importedKey] || [])])];
+                    localStorage.setItem(key, JSON.stringify(merged));
+                });
+                persist();
+                loadCustomOptions();
+                renderEntries();
+                showToast(`${newEntries.length} neue Einträge importiert ✓`, 'success');
+            } catch(err) {
+                showToast('Fehler beim Lesen der Datei');
+            }
+            // Input zurücksetzen damit man dieselbe Datei nochmals wählen kann
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+    // ── Dropdown-Erweiterung ───────────────────────────────────────────
+    function openModal(type) {
+        modalType = type;
+        document.getElementById('modal-title').textContent =
+            type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
+        document.getElementById('modal-input').placeholder =
+            type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
+        document.getElementById('modal-input').value = '';
+        document.getElementById('modal').classList.add('active');
+        setTimeout(() => document.getElementById('modal-input').focus(), 50);
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+    function saveModalEntry() {
+        const val = document.getElementById('modal-input').value.trim();
+        if (!val) { showToast('Bitte einen Wert eingeben'); return; }
+        const select = document.getElementById(modalType);
+        if (Array.from(select.options).some(o => o.value === val)) {
+            showToast('Dieser Eintrag existiert bereits'); return;
+        }
+        select.add(new Option(val, val));
+        select.value = val;
+        const key = modalType === 'taetigkeit' ? 'hm-custom-taetigkeiten' : 'hm-custom-orte';
+        try {
+            const arr = JSON.parse(localStorage.getItem(key) || '[]');
+            arr.push(val);
+            localStorage.setItem(key, JSON.stringify(arr));
+        } catch(e) {}
+        closeModal();
+        showToast('Hinzugefügt ✓', 'success');
+    }
+    function loadCustomOptions() {
+        [['taetigkeit','hm-custom-taetigkeiten'],['ort','hm-custom-orte']].forEach(([id, key]) => {
+            try {
+                const arr = JSON.parse(localStorage.getItem(key) || '[]');
+                const sel = document.getElementById(id);
+                arr.forEach(v => {
+                    if (!Array.from(sel.options).some(o => o.value === v)) sel.add(new Option(v, v));
+                });
+            } catch(e) {}
+        });
+    }
+    // ── Persistenz ─────────────────────────────────────────────────────
+    function persist() {
+        try { localStorage.setItem('hm-entries', JSON.stringify(entries)); } catch(e) {}
+    }
+</script>
+</body>
+</html>
 
+So überträgst du die Daten
+
+PC → iPhone:
+
+    Auf dem PC auf „⬇ Exportieren" klicken → eine .json-Datei wird heruntergeladen
+    Datei per AirDrop, iCloud Drive, WhatsApp oder E-Mail ans iPhone schicken
+    Auf dem iPhone die Datei öffnen/speichern, dann in der App auf „⬆ Importieren" tippen und die Datei auswählen
+
+Wichtig: Der Import ergänzt vorhandene Daten – er überschreibt nichts. Duplikate werden automatisch erkannt und übersprungen.
+
+Ich möchte die Daten vom iphone auf den pc importieren
+
+Der Ablauf ist genauso wie in die andere Richtung – nur umgekehrt:
+iPhone → PC
+
+1. Auf dem iPhone exportieren In der App auf „⬇ Exportieren" tippen → eine Datei wie stundenerfassung_2026-06-01.json wird heruntergeladen und landet in der Dateien-App (Ordner „Downloads")
+
+2. Datei auf den PC übertragen – eine von drei Möglichkeiten:
+
+    AirDrop (einfachste wenn du einen Mac hast): Datei in der Dateien-App lange antippen → Teilen → AirDrop → deinen Mac wählen
+    iCloud Drive: Datei in die iCloud verschieben → am PC unter herunterladen oder direkt im Windows Explorer (wenn iCloud für Windows installiert ist)
+    E-Mail / WhatsApp: Datei als Anhang an dich selbst schicken → am PC herunterladen
+
+3. Auf dem PC importieren In der App auf „⬆ Importieren" klicken → die .json-Datei vom Download-Ordner auswählen → fertig.
+
+    💡 Tipp: Mach das regelmäßig in beide Richtungen, damit beide Geräte immer denselben Stand haben. Da der Import Duplikate automatisch erkennt, kannst du bedenkenlos mehrfach importieren.
+
+ich möchte die app über ein appsymbol auf dem pc und iphone öffnen
+
+Das geht über PWA (Progressive Web App) – damit verhält sich die App wie eine echte installierte App, mit eigenem Symbol auf dem Homescreen, ohne Browser-Adressleiste.
+
+Du musst zwei kleine Dinge zur HTML-Datei hinzufügen: ein Manifest und einen Service Worker. Das klingt komplizierter als es ist – ich packe alles in eine einzige Datei.
+
+Speichere diese Datei als stundenerfassung.html – aber: Damit das App-Symbol funktioniert, muss die Datei über einen kleinen lokalen Webserver laufen. Den einfachsten Weg erkläre ich nach dem Code.
+html
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stundenerfassung</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Stunden">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" id="manifest-link">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            color: white; text-align: center; margin-bottom: 24px;
+            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white; border-radius: 16px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }
+        input, select, textarea {
+            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        input.error, select.error {
+            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
+        }
+        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
+        .input-with-button { display: flex; gap: 8px; }
+        .input-with-button select { flex: 1; }
+        .add-btn {
+            background: #667eea; color: white; border: none; border-radius: 8px;
+            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;
+        }
+        .add-btn:hover { background: #5a6fd6; }
+        /* Install-Banner */
+        .install-banner {
+            background: linear-gradient(135deg, #2ed573, #17c0eb);
+            color: #222; border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 20px; display: none;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .install-banner.visible { display: flex; }
+        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }
+        .btn-install {
+            background: white; color: #333; border: none; padding: 10px 18px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-dismiss {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer;
+            color: #444; flex-shrink: 0;
+        }
+        /* Sync */
+        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }
+        .btn-export {
+            background: #2ed573; color: #222; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-export:hover { background: #26c462; }
+        .btn-import {
+            background: #667eea; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-import:hover { background: #5a6fd6; }
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #333; color: white; padding: 12px 24px;
+            border-radius: 30px; font-size: 0.95rem; z-index: 2000;
+            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;
+        }
+        .toast.error   { background: #ff4757; }
+        .toast.success { background: #2ed573; color: #222; }
+        .toast.show    { transform: translateX(-50%) translateY(0); }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 14px 28px; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th {
+            background: #f8f9fa; padding: 12px; text-align: left;
+            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;
+        }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+        tr:hover { background: #f8f9fa; }
+        .delete-btn {
+            background: #ff4757; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+        }
+        .delete-btn:hover { background: #ff3344; }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .summary-label { font-size: 1rem; opacity: 0.9; }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+        /* Modal */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }
+        .modal-content h3 { margin-bottom: 16px; color: #333; }
+        .modal-content input { width: 100%; margin-bottom: 16px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .sync-bar { flex-direction: column; align-items: stretch; }
+            .btn-export, .btn-import { justify-content: center; }
+            .install-banner { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔧 Stundenerfassung Hausmeister</h1>
+    <!-- Install-Banner (erscheint automatisch wenn installierbar) -->
+    <div class="install-banner" id="install-banner">
+        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>
+        <button class="btn-install" id="btn-install">Installieren</button>
+        <button class="btn-dismiss" id="btn-dismiss" title="Schließen">✕</button>
+    </div>
+    <!-- SYNC -->
+    <div class="card">
+        <h2>🔄 Daten übertragen (PC ↔ Handy)</h2>
+        <div class="sync-bar">
+            <p>Exportiere deine Daten als Datei und importiere sie auf dem anderen Gerät.</p>
+            <button class="btn-export" onclick="exportData()">⬇ Exportieren</button>
+            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Importieren</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+    </div>
+    <!-- ERFASSUNG -->
+    <div class="card">
+        <h2>📝 Neue Arbeitszeit erfassen</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="datum">Datum</label>
+                <input type="date" id="datum">
+            </div>
+            <div class="form-group">
+                <label for="von">Von (z.B. 0800)</label>
+                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="bis">Bis (z.B. 1630)</label>
+                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="taetigkeit">Tätigkeit</label>
+                <div class="input-with-button">
+                    <select id="taetigkeit">
+                        <option value="">Bitte wählen…</option>
+                        <option>Reinigung</option>
+                        <option>Gartenarbeit</option>
+                        <option>Reparatur</option>
+                        <option>Winterdienst</option>
+                        <option>Müllentsorgung</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('taetigkeit')" title="Neue Tätigkeit">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ort">Beschäftigungsort</label>
+                <div class="input-with-button">
+                    <select id="ort">
+                        <option value="">Bitte wählen…</option>
+                        <option>Friedenrathstraße 7</option>
+                        <option>Brockesstraße 9</option>
+                        <option>Brockesstraße 9a</option>
+                        <option>Richard-Strauss-Straße 6</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('ort')" title="Neuen Ort">+</button>
+                </div>
+            </div>
+            <div class="form-group full-width">
+                <label for="bemerkungen">Bemerkungen</label>
+                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>
+            </div>
+        </div>
+        <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>
+    </div>
     <!-- TABELLE -->
     <div class="card">
         <h2>📋 Erfasste Arbeitszeiten</h2>
@@ -250,9 +1922,7 @@
         </div>
     </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <div class="modal" id="modal">
     <div class="modal-content">
         <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
@@ -263,7 +1933,6 @@
         </div>
     </div>
 </div>
-
 <script>
 // ── PWA: Manifest dynamisch einbetten ─────────────────────────────────────
 const manifest = {
@@ -288,11 +1957,9 @@ const manifest = {
         }
     ]
 };
-
 const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
 const manifestURL  = URL.createObjectURL(manifestBlob);
 document.getElementById('manifest-link').href = manifestURL;
-
 // ── PWA: Service Worker registrieren ──────────────────────────────────────
 if ('serviceWorker' in navigator) {
     const swCode = `
@@ -310,16 +1977,13 @@ if ('serviceWorker' in navigator) {
     const swURL  = URL.createObjectURL(swBlob);
     navigator.serviceWorker.register(swURL).catch(() => {});
 }
-
 // ── PWA: Install-Prompt ───────────────────────────────────────────────────
 let deferredPrompt = null;
-
 window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
     document.getElementById('install-banner').classList.add('visible');
 });
-
 document.getElementById('btn-install').addEventListener('click', async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -328,21 +1992,17 @@ document.getElementById('btn-install').addEventListener('click', async () => {
     deferredPrompt = null;
     document.getElementById('install-banner').classList.remove('visible');
 });
-
 document.getElementById('btn-dismiss').addEventListener('click', () => {
     document.getElementById('install-banner').classList.remove('visible');
 });
-
 window.addEventListener('appinstalled', () => {
     document.getElementById('install-banner').classList.remove('visible');
     showToast('App erfolgreich installiert ✓', 'success');
 });
-
 // ── State ──────────────────────────────────────────────────────────────────
 let entries = [];
 let modalType = '';
 try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }
-
 // ── Init ───────────────────────────────────────────────────────────────────
 document.getElementById('datum').valueAsDate = new Date();
 loadCustomOptions();
@@ -350,7 +2010,6 @@ renderEntries();
 document.getElementById('save-btn').addEventListener('click', addEntry);
 document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });
 document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
-
 // ── Toast ──────────────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg, type = 'error') {
@@ -360,7 +2019,6 @@ function showToast(msg, type = 'error') {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
 }
-
 // ── Feldmarkierung ─────────────────────────────────────────────────────────
 function markError(id) {
     const el = document.getElementById(id);
@@ -368,7 +2026,6 @@ function markError(id) {
     el.addEventListener('input',  () => el.classList.remove('error'), { once: true });
     el.addEventListener('change', () => el.classList.remove('error'), { once: true });
 }
-
 // ── Zeithelfer ─────────────────────────────────────────────────────────────
 function parseTime(s) {
     s = String(s).trim();
@@ -387,7 +2044,6 @@ function calcHours(von, bis) {
     return (bMin - vMin) / 60;
 }
 function fmtDec(n) { return n.toFixed(2).replace('.', ','); }
-
 // ── Eintrag speichern ──────────────────────────────────────────────────────
 function addEntry() {
     const datum       = document.getElementById('datum').value;
@@ -396,13 +2052,11 @@ function addEntry() {
     const taetigkeit  = document.getElementById('taetigkeit').value;
     const ort         = document.getElementById('ort').value;
     const bemerkungen = document.getElementById('bemerkungen').value.trim();
-
     if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }
     if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }
     if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }
     if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }
     if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }
-
     entries.push({ id: Date.now(), datum, von, bis, hours: calcHours(von, bis), taetigkeit, ort, bemerkungen });
     entries.sort((a, b) => a.datum.localeCompare(b.datum));
     persist();
@@ -412,7 +2066,6 @@ function addEntry() {
     document.getElementById('taetigkeit').value = '';
     document.getElementById('ort').value = '';
 }
-
 // ── Eintrag löschen ────────────────────────────────────────────────────────
 function deleteEntry(id) {
     entries = entries.filter(e => e.id !== id);
@@ -420,7 +2073,6 @@ function deleteEntry(id) {
     renderEntries();
     showToast('Eintrag gelöscht');
 }
-
 // ── Tabelle rendern ────────────────────────────────────────────────────────
 function renderEntries() {
     const tbody   = document.getElementById('entries-body');
@@ -449,7 +2101,6 @@ function renderEntries() {
     });
     document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
 }
-
 // ── Export / Import ────────────────────────────────────────────────────────
 function exportData() {
     const payload = {
@@ -466,7 +2117,6 @@ function exportData() {
     URL.revokeObjectURL(url);
     showToast('Exportiert ✓', 'success');
 }
-
 function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -493,7 +2143,6 @@ function importData(event) {
     };
     reader.readAsText(file);
 }
-
 // ── Dropdown-Erweiterung ───────────────────────────────────────────────────
 function openModal(type) {
     modalType = type;
@@ -511,3 +2160,639 @@ function saveModalEntry() {
     if (!val) { showToast('Bitte einen Wert eingeben'); return; }
     const select = document.getElementById(modalType);
     if (Array.from(select.options).some(o => o.value === val)) { showToast('Bereits
+
+Damit das App-Symbol funktioniert, muss die Datei über einen kleinen lokalen Webserver laufen. Den einfachsten Weg erkläre ich nach dem Code.
+
+Guter Hinweis – hier ist die einfachste Methode, die ohne technisches Vorwissen funktioniert:
+Weg über GitHub Pages (kostenlos, einmalig einrichten)
+
+Das ist die beste Lösung: Die App läuft auf einer echten URL, funktioniert auf PC und iPhone, und das App-Symbol klappt ohne lokalen Server.
+Einmalige Einrichtung (ca. 5 Minuten)
+
+1. Kostenlosen Account anlegen → → „Sign up" → E-Mail, Passwort, fertig
+
+2. Neues Repository erstellen
+
+    Oben rechts auf „+" → „New repository"
+    Name: stundenerfassung
+    „Public" auswählen
+    Haken bei „Add a README file"
+    → „Create repository"
+
+3. HTML-Datei hochladen
+
+    Im Repository auf „Add file" → „Upload files"
+    Die stundenerfassung.html reinziehen
+    Wichtig: Datei umbenennen zu index.html (vorher auf dem PC umbenennen)
+    → „Commit changes"
+
+4. GitHub Pages aktivieren
+
+    Im Repository auf „Settings" → links auf „Pages"
+    Unter „Branch": main auswählen → „Save"
+    Nach ca. 1 Minute erscheint die URL: [deinname.github.io](https://deinname.github.io/stundenerfassung)
+
+App-Symbol installieren
+
+Auf dem iPhone (Safari):
+
+    URL in Safari öffnen
+    Teilen-Symbol (□↑) antippen
+    „Zum Home-Bildschirm" → „Hinzufügen"
+
+Auf dem PC (Chrome oder Edge):
+
+    URL öffnen
+    In der Adressleiste erscheint rechts ein kleines Install-Symbol (⊕ oder Bildschirm mit Pfeil)
+    Draufklicken → „Installieren"
+    Die App erscheint im Startmenü und auf dem Desktop
+
+    💡 Vorteil: Die URL bleibt immer gleich. Du kannst sie als Lesezeichen speichern, teilen oder auf beiden Geräten installieren. Die Daten bleiben weiterhin lokal auf jedem Gerät – der Export/Import-Weg bleibt also für die Synchronisation nötig.
+
+wo erscheint die url
+
+Nach Schritt 4 – wenn du auf „Save" geklickt hast – erscheint die URL direkt auf derselben Settings-Seite:
+
+Settings → Pages → oben in der grünen Box:
+
+    ✅ Your site is live at [deinname.github.io](https://deinname.github.io/stundenerfassung)
+
+Das kann 1–2 Minuten dauern bis die Box erscheint – einfach die Seite kurz neu laden falls sie noch nicht da ist.
+
+Den Link [deinname.github.io](https://deinname.github.io/stundenerfassung) dann einfach auf dem iPhone in Safari öffnen – und schon kannst du die App auf beiden Geräten installieren.
+
+wie die Seite kurz neu laden
+
+Auf dem PC:
+
+    Taste F5 drücken, oder
+    Strg + R
+
+Auf dem iPhone:
+
+    In Safari die Adressleiste antippen → dann das Neuladen-Symbol (↺) rechts in der Adressleiste tippen
+
+ich kann die app nicht öffnen, sehe nur den titel
+
+Das klingt danach, dass die Seite zwar lädt, aber der JavaScript-Code nicht ausgeführt wird – oder die index.html noch nicht korrekt hochgeladen wurde.
+
+Gehe diese Punkte der Reihe nach durch:
+
+1. Richtige Datei hochgeladen?
+
+    Im Repository auf GitHub nachschauen ob die Datei wirklich index.html heißt (nicht stundenerfassung.html o.ä.)
+    Draufklicken und prüfen ob der HTML-Code drin steht
+
+2. GitHub Pages auf den richtigen Ordner eingestellt?
+
+    Settings → Pages
+    Branch: main, Ordner: / (root) → Save
+
+3. Cache leeren und neu laden Manchmal zeigt der Browser noch eine alte Version:
+
+    PC: Strg + Shift + R (hartes Neuladen)
+    iPhone: Safari schließen, kurz warten, neu öffnen
+
+4. Richtige URL? Die URL muss exakt so aussehen:
+
+[deinusername.github.io](https://DEINUSERNAME.github.io/stundenerfassung)
+
+    Kein www. davor
+    Kein .html am Ende
+
+Magst du mir sagen was du siehst wenn du die URL öffnest? Zum Beispiel:
+
+    Nur weißer Hintergrund mit dem Titel?
+    Fehlermeldung „404"?
+    Ladebalken dreht sich endlos?
+
+Dann kann ich genau sagen wo es hakt.
+
+Nur weißer Hintergrund mit dem Titel?
+
+Weißer Hintergrund mit Titel bedeutet: die HTML-Datei wird geladen, aber der Code ist unvollständig – das liegt daran, dass der Code im letzten Schritt abgeschnitten wurde (der Chat hat ihn nicht vollständig übertragen).
+
+Lösung: Lade diese vollständige, funktionierende Datei hoch:
+
+    Kopiere den kompletten Code aus dieser Antwort (weiter oben im Chat – die Version mit dem grünen Export-Button)
+    Öffne auf dem PC den Editor (Windows-Taste → „Editor" eingeben)
+    Kompletten Code reinkopieren
+    Speichern als index.html – wichtig: beim Speichern unter „Dateityp" „Alle Dateien (*.*)" wählen, sonst wird es index.html.txt
+    Auf GitHub: alte Datei löschen → neue index.html hochladen
+    Seite neu laden (Strg + Shift + R)
+
+Alternativ – noch einfacher:
+
+Schreib kurz „schick mir die komplette Datei nochmal" und ich liefere dir den gesamten Code in einem Stück, ohne dass er abgeschnitten wird.
+
+schick mir die komplette Datei nochmal
+
+Hier ist die vollständige Datei – alles in einem Stück:
+html
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stundenerfassung</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Stunden">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" id="manifest-link">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            color: white; text-align: center; margin-bottom: 24px;
+            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white; border-radius: 16px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }
+        input, select, textarea {
+            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        input.error, select.error {
+            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
+        }
+        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
+        .input-with-button { display: flex; gap: 8px; }
+        .input-with-button select { flex: 1; }
+        .add-btn {
+            background: #667eea; color: white; border: none; border-radius: 8px;
+            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;
+        }
+        .add-btn:hover { background: #5a6fd6; }
+        .install-banner {
+            background: linear-gradient(135deg, #2ed573, #17c0eb);
+            color: #222; border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 20px; display: none;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .install-banner.visible { display: flex; }
+        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }
+        .btn-install {
+            background: white; color: #333; border: none; padding: 10px 18px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+        }
+        .btn-dismiss {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #444; flex-shrink: 0;
+        }
+        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }
+        .btn-export {
+            background: #2ed573; color: #222; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-export:hover { background: #26c462; }
+        .btn-import {
+            background: #667eea; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-import:hover { background: #5a6fd6; }
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #333; color: white; padding: 12px 24px;
+            border-radius: 30px; font-size: 0.95rem; z-index: 2000;
+            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;
+        }
+        .toast.error   { background: #ff4757; }
+        .toast.success { background: #2ed573; color: #222; }
+        .toast.show    { transform: translateX(-50%) translateY(0); }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 14px 28px; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th {
+            background: #f8f9fa; padding: 12px; text-align: left;
+            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;
+        }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+        tr:hover { background: #f8f9fa; }
+        .delete-btn {
+            background: #ff4757; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+        }
+        .delete-btn:hover { background: #ff3344; }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .summary-label { font-size: 1rem; opacity: 0.9; }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }
+        .modal-content h3 { margin-bottom: 16px; color: #333; }
+        .modal-content input { width: 100%; margin-bottom: 16px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .sync-bar { flex-direction: column; align-items: stretch; }
+            .btn-export, .btn-import { justify-content: center; }
+            .install-banner { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔧 Stundenerfassung Hausmeister</h1>
+    <div class="install-banner" id="install-banner">
+        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>
+        <button class="btn-install" id="btn-install">Installieren</button>
+        <button class="btn-dismiss" id="btn-dismiss">✕</button>
+    </div>
+    <div class="card">
+        <h2>🔄 Daten übertragen (PC ↔ Handy)</h2>
+        <div class="sync-bar">
+            <p>Exportiere deine Daten als Datei und importiere sie auf dem anderen Gerät.</p>
+            <button class="btn-export" onclick="exportData()">⬇ Exportieren</button>
+            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Importieren</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+    </div>
+    <div class="card">
+        <h2>📝 Neue Arbeitszeit erfassen</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="datum">Datum</label>
+                <input type="date" id="datum">
+            </div>
+            <div class="form-group">
+                <label for="von">Von (z.B. 0800)</label>
+                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="bis">Bis (z.B. 1630)</label>
+                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="taetigkeit">Tätigkeit</label>
+                <div class="input-with-button">
+                    <select id="taetigkeit">
+                        <option value="">Bitte wählen…</option>
+                        <option>Reinigung</option>
+                        <option>Gartenarbeit</option>
+                        <option>Reparatur</option>
+                        <option>Winterdienst</option>
+                        <option>Müllentsorgung</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('taetigkeit')">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ort">Beschäftigungsort</label>
+                <div class="input-with-button">
+                    <select id="ort">
+                        <option value="">Bitte wählen…</option>
+                        <option>Friedenrathstraße 7</option>
+                        <option>Brockesstraße 9</option>
+                        <option>Brockesstraße 9a</option>
+                        <option>Richard-Strauss-Straße 6</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('ort')">+</button>
+                </div>
+            </div>
+            <div class="form-group full-width">
+                <label for="bemerkungen">Bemerkungen</label>
+                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>
+            </div>
+        </div>
+        <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>
+    </div>
+    <div class="card">
+        <h2>📋 Erfasste Arbeitszeiten</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum</th><th>Von</th><th>Bis</th><th>Stunden</th>
+                        <th>Tätigkeit</th><th>Ort</th><th>Bemerkung</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="entries-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Noch keine Einträge vorhanden</p>
+            </div>
+        </div>
+        <div class="summary" id="summary" style="display:none;">
+            <span class="summary-label">Gesamtstunden diesen Monat</span>
+            <span class="summary-value" id="total-hours">0,00 Std.</span>
+        </div>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
+        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+            <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>
+        </div>
+    </div>
+</div>
+<script>
+// ── PWA Manifest ───────────────────────────────────────────────────────────
+const manifest = {
+    name: "Stundenerfassung Hausmeister",
+    short_name: "Stunden",
+    description: "Stundenerfassung für den Hausmeister",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#667eea",
+    theme_color: "#667eea",
+    icons: [{
+        src: "data:image/svg+xml," + encodeURIComponent(
+            '<svg xmlns="[w3.org](http://www.w3.org/2000/svg)" viewBox="0 0 512 512">' +
+            '<rect width="512" height="512" rx="100" fill="#667eea"/>' +
+            '<text x="256" y="340" font-size="300" text-anchor="middle" fill="white">🔧</text>' +
+            '</svg>'
+        ),
+        sizes: "512x512",
+        type: "image/svg+xml",
+        purpose: "any maskable"
+    }]
+};
+const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+// ── Service Worker ─────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    const swCode = `
+        self.addEventListener('install', () => self.skipWaiting());
+        self.addEventListener('activate', () => self.clients.claim());
+        self.addEventListener('fetch', e => {
+            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        });
+    `;
+    const swURL = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));
+    navigator.serviceWorker.register(swURL).catch(() => {});
+}
+// ── Install-Prompt ─────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').classList.add('visible');
+});
+document.getElementById('btn-install').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') showToast('App installiert ✓', 'success');
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('visible');
+});
+document.getElementById('btn-dismiss').addEventListener('click', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+});
+window.addEventListener('appinstalled', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+});
+// ── State ──────────────────────────────────────────────────────────────────
+let entries = [];
+let modalType = '';
+try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }
+// ── Init ───────────────────────────────────────────────────────────────────
+document.getElementById('datum').valueAsDate = new Date();
+loadCustomOptions();
+renderEntries();
+document.getElementById('save-btn').addEventListener('click', addEntry);
+document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'error') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+// ── Feldmarkierung ─────────────────────────────────────────────────────────
+function markError(id) {
+    const el = document.getElementById(id);
+    el.classList.add('error');
+    el.addEventListener('input',  () => el.classList.remove('error'), { once: true });
+    el.addEventListener('change', () => el.classList.remove('error'), { once: true });
+}
+// ── Zeithelfer ─────────────────────────────────────────────────────────────
+function parseTime(s) {
+    s = String(s).trim();
+    if (!/^\d{4}$/.test(s)) return null;
+    const h = parseInt(s.slice(0,2), 10);
+    const m = parseInt(s.slice(2,4), 10);
+    if (h > 23 || m > 59) return null;
+    return { h, m };
+}
+function fmtTime(t) {
+    return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+}
+function calcHours(von, bis) {
+    const v = parseTime(von), b = parseTime(bis);
+    if (!v || !b) return 0;
+    let vMin = v.h * 60 + v.m, bMin = b.h * 60 + b.m;
+    if (bMin <= vMin) bMin += 1440;
+    return (bMin - vMin) / 60;
+}
+function fmtDec(n) { return n.toFixed(2).replace('.', ','); }
+// ── Eintrag speichern ──────────────────────────────────────────────────────
+function addEntry() {
+    const datum       = document.getElementById('datum').value;
+    const von         = document.getElementById('von').value.trim();
+    const bis         = document.getElementById('bis').value.trim();
+    const taetigkeit  = document.getElementById('taetigkeit').value;
+    const ort         = document.getElementById('ort').value;
+    const bemerkungen = document.getElementById('bemerkungen').value.trim();
+    if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }
+    if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }
+    if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }
+    if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }
+    if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }
+    entries.push({
+        id: Date.now(),
+        datum, von, bis,
+        hours: calcHours(von, bis),
+        taetigkeit, ort, bemerkungen
+    });
+    entries.sort((a, b) => a.datum.localeCompare(b.datum));
+    persist();
+    renderEntries();
+    showToast('Eintrag gespeichert ✓', 'success');
+    ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('taetigkeit').value = '';
+    document.getElementById('ort').value = '';
+}
+// ── Eintrag löschen ────────────────────────────────────────────────────────
+function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    persist();
+    renderEntries();
+    showToast('Eintrag gelöscht');
+}
+// ── Tabelle rendern ────────────────────────────────────────────────────────
+function renderEntries() {
+    const tbody   = document.getElementById('entries-body');
+    const empty   = document.getElementById('empty-state');
+    const summary = document.getElementById('summary');
+    tbody.innerHTML = '';
+    if (entries.length === 0) {
+        empty.style.display = 'block';
+        summary.style.display = 'none';
+        return;
+    }
+    empty.style.display = 'none';
+    summary.style.display = 'flex';
+    let total = 0;
+    entries.forEach(e => {
+        total += e.hours;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE') + '</td>' +
+            '<td>' + fmtTime(parseTime(e.von)) + '</td>' +
+            '<td>' + fmtTime(parseTime(e.bis)) + '</td>' +
+            '<td><strong>' + fmtDec(e.hours) + ' Std.</strong></td>' +
+            '<td>' + e.taetigkeit + '</td>' +
+            '<td>' + e.ort + '</td>' +
+            '<td>' + (e.bemerkungen || '–') + '</td>' +
+            '<td><button class="delete-btn" onclick="deleteEntry(' + e.id + ')">✕</button></td>';
+        tbody.appendChild(tr);
+    });
+    document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
+}
+// ── Export ─────────────────────────────────────────────────────────────────
+function exportData() {
+    const payload = {
+        entries,
+        customTaetigkeiten: JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]'),
+        customOrte:         JSON.parse(localStorage.getItem('hm-custom-orte') || '[]')
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'stundenerfassung_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exportiert ✓', 'success');
+}
+// ── Import ─────────────────────────────────────────────────────────────────
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const payload = JSON.parse(e.target.result);
+            if (!Array.isArray(payload.entries)) return showToast('Ungültige Datei');
+            const existingIds = new Set(entries.map(x => x.id));
+            const newEntries  = payload.entries.filter(x => !existingIds.has(x.id));
+            entries = [...entries, ...newEntries].sort((a,b) => a.datum.localeCompare(b.datum));
+            ['hm-custom-taetigkeiten','hm-custom-orte'].forEach((key, i) => {
+                const importedKey = i === 0 ? 'customTaetigkeiten' : 'customOrte';
+                const existing    = JSON.parse(localStorage.getItem(key) || '[]');
+                const merged      = [...new Set([...existing, ...(payload[importedKey] || [])])];
+                localStorage.setItem(key, JSON.stringify(merged));
+            });
+            persist();
+            loadCustomOptions();
+            renderEntries();
+            showToast(newEntries.length + ' neue Einträge importiert ✓', 'success');
+        } catch(err) {
+            showToast('Fehler beim Lesen der Datei');
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+// ── Dropdown-Erweiterung ───────────────────────────────────────────────────
+function openModal(type) {
+    modalType = type;
+    document.getElementById('modal-title').textContent =
+        type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
+    document.getElementById('modal-input').placeholder =
+        type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
+    document.getElementById('modal-input').value = '';
+    document.getElementById('modal').classList.add('active');
+    setTimeout(() => document.getElementById('modal-input').focus(), 50);
+}
+function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+}
+function saveModalEntry() {
+    const val = document.getElementById('modal-input').value.trim();
+    if (!val) { showToast('Bitte einen Wert eingeben'); return; }
+    const select = document.getElementById(modalType);
+    if (Array.from(select.options).some(o => o.value === val)) {
+        showToast('Dieser Eintrag existiert bereits'); return;
+    }
+    select.add(new Option(val, val));
+    select.value = val;
+    const key = modalType === 'taetigkeit' ? 'hm-custom-taetigkeiten' : 'hm-custom-orte';
+    try {
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        arr.push(val);
+        localStorage.setItem(key, JSON.stringify(arr));
+    } catch(e) {}
+    closeModal();
+    showToast('Hinzugefügt ✓', 'success');
+}
+function loadCustomOptions() {
+    [['taetigkeit','hm-custom-taetigkeiten'],['ort','hm-custom-orte']].forEach(([id, key]) => {
+        try {
+            const arr = JSON.parse(localStorage.getItem(key) || '[]');
+            const sel = document.getElementById(id);
+            arr.forEach(v => {
+                if (!Array.from(sel.options).some(o => o.value === v)) {
+                    sel.add(new Option(v, v));
+                }
+            });
+        } catch(e) {}
+    });
+}
+// ── Persistenz ─────────────────────────────────────────────────────────────
+function persist() {
+    try { localStorage.setItem('hm-entries', JSON.stringify(entries)); } catch(e) {}
+}
+</script>
+</body>
+</html>alStorage.setItem('hm-entries', JSON.stringify(entries)); } catch(e) {}}</script></body></html>
