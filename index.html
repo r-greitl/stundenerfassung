@@ -3,274 +3,609 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hausmeister Zeiterfassung</title>
+    <title>Stundenerfassung</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Stunden">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" id="manifest-link">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f4f6f9; margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { color: #16365c; margin-top: 0; border-bottom: 2px solid #365f91; padding-bottom: 10px; font-size: 22px; }
-        .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-        .col { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
-        label { font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #444; }
-        input, select, textarea { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; -webkit-appearance: none; }
-        input:focus, select:focus, textarea:focus { border-color: #365f91; outline: none; }
-        
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        button { flex: 1; min-width: 150px; padding: 14px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; text-align: center; }
-        .btn-add { background-color: #365f91; color: white; }
-        .btn-add:hover { background-color: #28476d; }
-        .btn-export { background-color: #2e7d32; color: white; }
-        .btn-export:hover { background-color: #1b5e20; }
-        
-        .dynamic-add { display: flex; gap: 5px; margin-top: 5px; }
-        .dynamic-add input { flex: 1; padding: 8px; font-size: 14px; }
-        .dynamic-add button { flex: none; width: 45px; padding: 8px; font-size: 18px; background: #555; color: white; margin: 0; }
-
-        .live-hours { background: #f0f4f8; padding: 10px; border-left: 4px solid #365f91; font-weight: bold; margin-bottom: 12px; font-size: 15px; }
-        .total-box { background: #dce6f1; padding: 15px; font-size: 18px; font-weight: bold; color: #16365c; margin-top: 20px; border-radius: 4px; text-align: right; }
-        
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #365f91; color: white; }
-        tr:nth-child(even) { background-color: #f9fbfd; }
-        .btn-delete { background: #c62828; color: white; border: none; padding: 6px 10px; border-radius: 3px; cursor: pointer; font-size: 13px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            color: white; text-align: center; margin-bottom: 24px;
+            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white; border-radius: 16px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }
+        input, select, textarea {
+            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;
+            color: #333; -webkit-appearance: none; /* Verhindert iOS-Standard-Styling-Bugs */
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        input.error, select.error {
+            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
+        }
+        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
+        .live-hours-hint { font-size: 0.85rem; color: #667eea; font-weight: bold; margin-top: 4px; }
+        .input-with-button { display: flex; gap: 8px; }
+        .input-with-button select { flex: 1; }
+        .add-btn {
+            background: #667eea; color: white; border: none; border-radius: 8px;
+            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;
+        }
+        .add-btn:hover { background: #5a6fd6; }
+        .install-banner {
+            background: linear-gradient(135deg, #2ed573, #17c0eb);
+            color: #222; border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 20px; display: none;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .install-banner.visible { display: flex; }
+        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }
+        .btn-install {
+            background: white; color: #333; border: none; padding: 10px 18px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+        }
+        .btn-dismiss {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #444; flex-shrink: 0;
+        }
+        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }
+        .btn-export {
+            background: #ffa502; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-export:hover { background: #eccc68; }
+        .btn-excel {
+            background: #2ed573; color: #222; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-excel:hover { background: #26c462; }
+        .btn-import {
+            background: #667eea; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-import:hover { background: #5a6fd6; }
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #333; color: white; padding: 12px 24px;
+            border-radius: 30px; font-size: 0.95rem; z-index: 2000;
+            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;
+        }
+        .toast.error   { background: #ff4757; }
+        .toast.success { background: #2ed573; color: #222; }
+        .toast.show    { transform: translateX(-50%) translateY(0); }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 14px 28px; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th {
+            background: #f8f9fa; padding: 12px; text-align: left;
+            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;
+        }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+        tr:hover { background: #f8f9fa; }
+        .delete-btn {
+            background: #ff4757; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+        }
+        .delete-btn:hover { background: #ff3344; }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .summary-label { font-size: 1rem; opacity: 0.9; }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }
+        .modal-content h3 { margin-bottom: 16px; color: #333; }
+        .modal-content input { width: 100%; margin-bottom: 16px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .sync-bar { flex-direction: column; align-items: stretch; }
+            .btn-export, .btn-import, .btn-excel { justify-content: center; }
+            .install-banner { flex-wrap: wrap; }
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>Hausmeister Stundenerfassung</h2>
+    <h1>🔧 Stundenerfassung Hausmeister</h1>
     
-    <div class="row">
-        <div class="col">
-            <label for="datum">Datum</label>
-            <input type="date" id="datum">
-        </div>
-        <div class="col">
-            <label for="von">Von (z.B. 0800)</label>
-            <input type="number" id="von" placeholder="0800" pattern="[0-9]*" inputmode="numeric" oninput="berechneLiveStunden()">
-        </div>
-        <div class="col">
-            <label for="bis">Bis (z.B. 1630)</label>
-            <input type="number" id="bis" placeholder="1630" pattern="[0-9]*" inputmode="numeric" oninput="berechneLiveStunden()">
+    <div class="install-banner" id="install-banner">
+        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>
+        <button type="button" class="btn-install" id="btn-install">Installieren</button>
+        <button type="button" class="btn-dismiss" id="btn-dismiss">✕</button>
+    </div>
+    
+    <div class="card">
+        <h2>🔄 Daten übertragen & Sichern</h2>
+        <div class="sync-bar">
+            <p>Exportiere Daten zur Synchronisation oder lade die fertige Excel-Tabelle herunter.</p>
+            <button type="button" class="btn-export" onclick="exportData()">⬇ JSON Backup</button>
+            <button type="button" class="btn-excel" onclick="exportToExcel()">📊 Excel Export</button>
+            <button type="button" class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Importieren</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
         </div>
     </div>
-
-    <div class="live-hours" id="liveStundenAnzeige">Berechnete Stunden: 0,00 Std.</div>
-
-    <div class="row">
-        <div class="col">
-            <label for="taetigkeit">Tätigkeit</label>
-            <select id="taetigkeit"></select>
-            <div class="dynamic-add">
-                <input type="text" id="neuTaetigkeit" placeholder="Neue Tätigkeit...">
-                <button type="button" onclick="addTaetigkeit()">+</button>
+    
+    <div class="card">
+        <h2>📝 Neue Arbeitszeit erfassen</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="datum">Datum</label>
+                <input type="date" id="datum">
+            </div>
+            <div class="form-group">
+                <label for="von">Von (z.B. 0800)</label>
+                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="bis">Bis (z.B. 1630)</label>
+                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">
+                <div class="live-hours-hint" id="live-hours-anzeige">Vorschau: 0,00 Std.</div>
+            </div>
+            <div class="form-group">
+                <label for="taetigkeit">Tätigkeit</label>
+                <div class="input-with-button">
+                    <select id="taetigkeit">
+                        <option value="">Bitte wählen…</option>
+                        <option>Reinigung</option>
+                        <option>Gartenarbeit</option>
+                        <option>Reparatur</option>
+                        <option>Winterdienst</option>
+                        <option>Müllentsorgung</option>
+                    </select>
+                    <button type="button" class="add-btn" onclick="openModal('taetigkeit')">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ort">Beschäftigungsort</label>
+                <div class="input-with-button">
+                    <select id="ort">
+                        <option value="">Bitte wählen…</option>
+                        <option>Friedenrathstraße 7</option>
+                        <option>Brockesstraße 9</option>
+                        <option>Brockesstraße 9a</option>
+                        <option>Richard-Strauss-Straße 6</option>
+                    </select>
+                    <button type="button" class="add-btn" onclick="openModal('ort')">+</button>
+                </div>
+            </div>
+            <div class="form-group full-width">
+                <label for="bemerkungen">Bemerkungen</label>
+                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>
             </div>
         </div>
-        <div class="col">
-            <label for="ort">Beschäftigungsort</label>
-            <select id="ort"></select>
-            <div class="dynamic-add">
-                <input type="text" id="neuOrt" placeholder="Neuer Ort...">
-                <button type="button" onclick="addOrt()">+</button>
+        <button type="button" class="btn-primary" id="save-btn">✓ Eintrag speichern</button>
+    </div>
+    
+    <div class="card">
+        <h2>📋 Erfasste Arbeitszeiten</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum</th><th>Von</th><th>Bis</th><th>Stunden</th>
+                        <th>Tätigkeit</th><th>Ort</th><th>Bemerkung</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="entries-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Noch keine Einträge vorhanden</p>
             </div>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <label for="bemerkung">Bemerkungen</label>
-            <textarea id="bemerkung" rows="2" placeholder="Optionale Notizen..."></textarea>
+        <div class="summary" id="summary" style="display:none;">
+            <span class="summary-label">Gesamtstunden diesen Monat</span>
+            <span class="summary-value" id="total-hours">0,00 Std.</span>
         </div>
     </div>
+</div>
 
-    <div class="btn-group">
-        <button type="button" class="btn-add" onclick="eintragHinzufuegen()">Eintrag hinzufügen</button>
-        <button type="button" class="btn-export" onclick="exportToExcel()">Als Excel speichern</button>
-    </div>
+<div class="toast" id="toast"></div>
 
-    <div class="total-box" id="gesamtstundenAnzeige">Gesamtstunden Monat: 0,00 Std.</div>
-
-    <div class="table-container">
-        <table id="tabelleEintraege">
-            <thead>
-                <tr>
-                    <th>Datum</th>
-                    <th>Von</th>
-                    <th>Bis</th>
-                    <th>Stunden (Dezimal)</th>
-                    <th>Tätigkeit</th>
-                    <th>Ort</th>
-                    <th>Bemerkung</th>
-                    <th>Aktion</th>
-                </tr>
-            </thead>
-            <tbody id="tabellenBody"></tbody>
-        </table>
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
+        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">
+        <div class="modal-buttons">
+            <button type="button" class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+            <button type="button" class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Standardlisten für Dropdowns
-    let taetigkeiten = ["Gartenpflege / Rasenmähen", "Winterdienst (Schnee/Eis)", "Treppenhausreinigung", "Mülltonnendienst", "Kleinreparaturen", "Heizungsüberprüfung", "Zählerablesung", "Sonstiges"];
-    let orte = ["Friedenrathstraße 7", "Brockesstraße 9", "Brockesstraße 9a", "Richard-Strauss-Straße 6"];
-    let eintraege = [];
+// ── PWA Manifest ───────────────────────────────────────────────────────────
+const manifest = {
+    name: "Stundenerfassung Hausmeister",
+    short_name: "Stunden",
+    description: "Stundenerfassung für den Hausmeister",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#667eea",
+    theme_color: "#667eea",
+    icons: [{
+        src: "data:image/svg+xml," + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">' +
+            '<rect width="512" height="512" rx="100" fill="#667eea"/>' +
+            '<text x="256" y="340" font-size="300" text-anchor="middle" fill="white">🔧</text>' +
+            '</svg>'
+        ),
+        sizes: "512x512",
+        type: "image/svg+xml",
+        purpose: "any maskable"
+    }]
+};
+const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-    // Heutiges Datum als Standard setzen (iOS-sicher)
-    let heute = new Date();
-    let tag = ("0" + heute.getDate()).slice(-2);
-    let monat = ("0" + (heute.getMonth() + 1)).slice(-2);
-    let jahr = heute.getFullYear();
-    document.getElementById('datum').value = `${jahr}-${monat}-${tag}`;
-
-    // Dropdowns füllen
-    function updateDropdowns() {
-        let tSelect = document.getElementById('taetigkeit');
-        let oSelect = document.getElementById('ort');
-        
-        tSelect.innerHTML = taetigkeiten.map(t => `<option value="${t}">${t}</option>`).join('');
-        oSelect.innerHTML = orte.map(o => `<option value="${o}">${o}</option>`).join('');
-    }
-
-    function addTaetigkeit() {
-        let input = document.getElementById('neuTaetigkeit');
-        let wert = input.value.trim();
-        if(wert) { 
-            taetigkeiten.push(wert); 
-            input.value = ''; 
-            updateDropdowns();
-            document.getElementById('taetigkeit').value = wert; // Direkt auswählen
-        }
-    }
-
-    function addOrt() {
-        let input = document.getElementById('neuOrt');
-        let wert = input.value.trim();
-        if(wert) { 
-            orte.push(wert); 
-            input.value = ''; 
-            updateDropdowns(); 
-            document.getElementById('ort').value = wert; // Direkt auswählen
-        }
-    }
-
-    // Mathematische 4-Stellungsberechnung (z.B. 0930 -> 9.5)
-    function parseVierstellig(wert) {
-        let text = String(wert);
-        if (!text || text.length < 3) return 0;
-        if (text.length === 3) text = "0" + text; // Falls jemand 900 statt 0900 tippt
-        let num = parseInt(text);
-        if (isNaN(num)) return 0;
-        let stunden = Math.floor(num / 100);
-        let minuten = num % 100;
-        return stunden + (minuten / 60);
-    }
-
-    function berechneLiveStunden() {
-        let von = document.getElementById('von').value;
-        let bis = document.getElementById('bis').value;
-        if(String(von).length >= 3 && String(bis).length >= 3) {
-            let diff = parseVierstellig(bis) - parseVierstellig(von);
-            if(diff < 0) diff += 24; // Falls über Mitternacht gearbeitet wurde
-            document.getElementById('liveStundenAnzeige').innerText = `Berechnete Stunden: ${diff.toFixed(2).replace('.', ',')} Std.`;
-            return diff;
-        }
-        return 0;
-    }
-
-    function eintragHinzufuegen() {
-        let datum = document.getElementById('datum').value;
-        let von = document.getElementById('von').value;
-        let bis = document.getElementById('bis').value;
-        let taetigkeit = document.getElementById('taetigkeit').value;
-        let ort = document.getElementById('ort').value;
-        let bemerkung = document.getElementById('bemerkung').value;
-
-        if(!von || !bis) {
-            alert("Bitte geben Sie die Uhrzeiten ein!");
-            return;
-        }
-
-        let stunden = parseVierstellig(bis) - parseVierstellig(von);
-        if(stunden < 0) stunden += 24;
-        
-        let dObj = new Date(datum);
-        let formatiertesDatum = dObj.toLocaleDateString('de-DE');
-
-        // Führende Nullen für die Tabelle wiederherstellen
-        let vonText = String(von).padStart(4, '0');
-        let bisText = String(bis).padStart(4, '0');
-
-        eintraege.push({ datum: formatiertesDatum, von: vonText, bis: bisText, stunden, taetigkeit, ort, bemerkung });
-        
-        document.getElementById('von').value = '';
-        document.getElementById('bis').value = '';
-        document.getElementById('bemerkung').value = '';
-        document.getElementById('liveStundenAnzeige').innerText = `Berechnete Stunden: 0,00 Std.`;
-
-        renderTable();
-    }
-
-    function zeileLoeschen(index) {
-        eintraege.splice(index, 1);
-        renderTable();
-    }
-
-    function renderTable() {
-        let body = document.getElementById('tabellenBody');
-        body.innerHTML = '';
-        let gesamt = 0;
-
-        eintraege.forEach((e, index) => {
-            gesamt += e.stunden;
-            body.innerHTML += `
-                <tr>
-                    <td>${e.datum}</td>
-                    <td>${e.von}</td>
-                    <td>${e.bis}</td>
-                    <td>${e.stunden.toFixed(2).replace('.', ',')}</td>
-                    <td>${e.taetigkeit}</td>
-                    <td>${e.ort}</td>
-                    <td>${e.bemerkung}</td>
-                    <td><button type="button" class="btn-delete" onclick="zeileLoeschen(${index})">Löschen</button></td>
-                </tr>
-            `;
+// ── Service Worker ─────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    const swCode = `
+        self.addEventListener('install', () => self.skipWaiting());
+        self.addEventListener('activate', () => self.clients.claim());
+        self.addEventListener('fetch', e => {
+            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
         });
+    `;
+    const swURL = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));
+    navigator.serviceWorker.register(swURL).catch(() => {});
+}
 
-        document.getElementById('gesamtstundenAnzeige').innerText = `Gesamtstunden Monat: ${gesamt.toFixed(2).replace('.', ',')} Std.`;
+// ── Install-Prompt ─────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').classList.add('visible');
+});
+document.getElementById('btn-install').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') showToast('App installiert ✓', 'success');
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('visible');
+});
+document.getElementById('btn-dismiss').addEventListener('click', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+});
+window.addEventListener('appinstalled', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+});
+
+// ── State ──────────────────────────────────────────────────────────────────
+let entries = [];
+let modalType = '';
+try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.getElementById('datum').valueAsDate = new Date();
+loadCustomOptions();
+renderEntries();
+
+document.getElementById('save-btn').addEventListener('click', addEntry);
+document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+// Live-Stunden-Listener
+document.getElementById('von').addEventListener('input', triggerLiveCalculation);
+document.getElementById('bis').addEventListener('input', triggerLiveCalculation);
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'error') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+// ── Feldmarkierung ─────────────────────────────────────────────────────────
+function markError(id) {
+    const el = document.getElementById(id);
+    el.classList.add('error');
+    el.addEventListener('input',  () => el.classList.remove('error'), { once: true });
+    el.addEventListener('change', () => el.classList.remove('error'), { once: true });
+}
+
+// ── Zeithelfer ─────────────────────────────────────────────────────────────
+function parseTime(s) {
+    s = String(s).trim();
+    if (!/^\d{4}$/.test(s)) return null;
+    const h = parseInt(s.slice(0,2), 10);
+    const m = parseInt(s.slice(2,4), 10);
+    if (h > 23 || m > 59) return null;
+    return { h, m };
+}
+
+function fmtTime(t) {
+    if(!t) return "00:00";
+    return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+}
+
+function calcHours(von, bis) {
+    const v = parseTime(von), b = parseTime(bis);
+    if (!v || !b) return 0;
+    let vMin = v.h * 60 + v.m, bMin = b.h * 60 + b.m;
+    if (bMin <= vMin) bMin += 1440; // Über Mitternacht hinaus
+    return (bMin - vMin) / 60;
+}
+
+function fmtDec(n) { return n.toFixed(2).replace('.', ','); }
+
+function triggerLiveCalculation() {
+    const von = document.getElementById('von').value;
+    const bis = document.getElementById('bis').value;
+    const anzeige = document.getElementById('live-hours-anzeige');
+    if (von.length === 4 && bis.length === 4) {
+        let h = calcHours(von, bis);
+        anzeige.textContent = `Vorschau: ${fmtDec(h)} Std.`;
+    } else {
+        anzeige.textContent = `Vorschau: 0,00 Std.`;
+    }
+}
+
+// ── Eintrag speichern ──────────────────────────────────────────────────────
+function addEntry() {
+    const datum       = document.getElementById('datum').value;
+    const von         = document.getElementById('von').value.trim();
+    const bis         = document.getElementById('bis').value.trim();
+    const taetigkeit  = document.getElementById('taetigkeit').value;
+    const ort         = document.getElementById('ort').value;
+    const bemerkungen = document.getElementById('bemerkungen').value.trim();
+
+    if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }
+    if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }
+    if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }
+    if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }
+    if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }
+
+    entries.push({
+        id: Date.now(),
+        datum, von, bis,
+        hours: calcHours(von, bis),
+        taetigkeit, ort, bemerkungen
+    });
+
+    entries.sort((a, b) => a.datum.localeCompare(b.datum));
+    persist();
+    renderEntries();
+    
+    showToast('Eintrag gespeichert ✓', 'success');
+    ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('taetigkeit').value = '';
+    document.getElementById('ort').value = '';
+    document.getElementById('live-hours-anzeige').textContent = `Vorschau: 0,00 Std.`;
+}
+
+// ── Eintrag lösen ────────────────────────────────────────────────────────
+function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    persist();
+    renderEntries();
+    showToast('Eintrag gelöscht');
+}
+
+// ── Tabelle rendern ────────────────────────────────────────────────────────
+function renderEntries() {
+    const tbody   = document.getElementById('entries-body');
+    const empty   = document.getElementById('empty-state');
+    const summary = document.getElementById('summary');
+    tbody.innerHTML = '';
+
+    if (entries.length === 0) {
+        empty.style.display = 'block';
+        summary.style.display = 'none';
+        return;
     }
 
-    function exportToExcel() {
-        if(eintraege.length === 0) {
-            alert("Es gibt keine Einträge zum Exportieren!");
-            return;
+    empty.style.display = 'none';
+    summary.style.display = 'flex';
+    let total = 0;
+
+    entries.forEach(e => {
+        total += e.hours;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE') + '</td>' +
+            '<td>' + fmtTime(parseTime(e.von)) + '</td>' +
+            '<td>' + fmtTime(parseTime(e.bis)) + '</td>' +
+            '<td><strong>' + fmtDec(e.hours) + ' Std.</strong></td>' +
+            '<td>' + e.taetigkeit + '</td>' +
+            '<td>' + e.ort + '</td>' +
+            '<td>' + (e.bemerkungen || '–') + '</td>' +
+            '<td><button type="button" class="delete-btn" onclick="deleteEntry(' + e.id + ')">✕</button></td>';
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
+}
+
+// ── JSON Export ────────────────────────────────────────────────────────────
+function exportData() {
+    const payload = {
+        entries,
+        customTaetigkeiten: JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]'),
+        customOrte:         JSON.parse(localStorage.getItem('hm-custom-orte') || '[]')
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'stundenerfassung_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('JSON-Exportiert ✓', 'success');
+}
+
+// ── ECHTER EXCEL EXPORT (.xlsx) ───────────────────────────────────────────
+function exportToExcel() {
+    if(entries.length === 0) {
+        return showToast('Keine Einträge zum Exportieren vorhanden');
+    }
+
+    // Datenfelder formatiert für Excel aufbereiten
+    const excelDaten = entries.map(e => ({
+        "Datum": new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE'),
+        "Von": fmtTime(parseTime(e.von)),
+        "Bis": fmtTime(parseTime(e.bis)),
+        "Stunden (Dezimal)": e.hours,
+        "Tätigkeit": e.taetigkeit,
+        "Beschäftigungsort": e.ort,
+        "Bemerkung": e.bemerkungen || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelDaten);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Stundennachweis");
+
+    const datumHeute = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(workbook, `Stundenerfassung_Hausmeister_${datumHeute}.xlsx`);
+    showToast('Excel-Datei heruntergeladen ✓', 'success');
+}
+
+// ── JSON Import ────────────────────────────────────────────────────────────
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const payload = JSON.parse(e.target.result);
+            if (!Array.isArray(payload.entries)) return showToast('Ungültige Datei');
+
+            const existingIds = new Set(entries.map(x => x.id));
+            const newEntries  = payload.entries.filter(x => !existingIds.has(x.id));
+
+            entries = [...entries, ...newEntries].sort((a,b) => a.datum.localeCompare(b.datum));
+
+            ['hm-custom-taetigkeiten','hm-custom-orte'].forEach((key, i) => {
+                const importedKey = i === 0 ? 'customTaetigkeiten' : 'customOrte';
+                const existing    = JSON.parse(localStorage.getItem(key) || '[]');
+                const merged      = [...new Set([...existing, ...(payload[importedKey] || [])])];
+                localStorage.setItem(key, JSON.stringify(merged));
+            });
+
+            persist();
+            loadCustomOptions();
+            renderEntries();
+            showToast(newEntries.length + ' neue Einträge importiert ✓', 'success');
+        } catch(err) {
+            showToast('Fehler beim Lesen der Datei');
         }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
 
-        let excelDaten = eintraege.map(e => ({
-            "Datum": e.datum,
-            "Von": e.von,
-            "Bis": e.bis,
-            "Stunden (Dezimal)": e.stunden,
-            "Tätigkeit": e.taetigkeit,
-            "Beschäftigungsort": e.ort,
-            "Bemerkung": e.bemerkung
-        }));
+// ── Dropdown-Erweiterung (iOS-Kompatibel optimiert) ───────────────────────
+function openModal(type) {
+    modalType = type;
+    document.getElementById('modal-title').textContent =
+        type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
+    document.getElementById('modal-input').placeholder =
+        type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
+    document.getElementById('modal-input').value = '';
+    document.getElementById('modal').classList.add('active');
+    setTimeout(() => document.getElementById('modal-input').focus(), 50);
+}
 
-        let worksheet = XLSX.utils.json_to_sheet(excelDaten);
-        let workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Stundenerfassung");
+function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+}
 
-        let datumHeute = new Date().toISOString().slice(0,10);
-        let dateiname = `Stundenerfassung_Hausmeister_${datumHeute}.xlsx`;
-        
-        XLSX.writeFile(workbook, dateiname);
+function saveModalEntry() {
+    const val = document.getElementById('modal-input').value.trim();
+    if (!val) { showToast('Bitte einen Wert eingeben'); return; }
+
+    const select = document.getElementById(modalType);
+    if (Array.from(select.options).some(o => o.value === val)) {
+        showToast('Dieser Eintrag existiert bereits'); return;
     }
 
-    // Start-Initialisierung
-    updateDropdowns();
-</script>
+    // iOS-Safe Option Insertion mittels appendChild
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = val;
+    select.appendChild(opt);
+    select.value = val;
 
+    const key = modalType === 'taetigkeit' ? 'hm-custom-taetigkeiten' : 'hm-custom-orte';
+    try {
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        arr.push(val);
+        localStorage.setItem(key, JSON.stringify(arr));
+    } catch(e) {}
+
+    closeModal();
+    showToast('Hinzugefügt ✓', 'success');
+}
+
+function loadCustomOptions() {
+    [['taetigkeit','hm-custom-taetigkeiten'],['ort','hm-custom-orte']].forEach(([id, key]) => {
+        try {
+            const arr = JSON.parse(localStorage.getItem(key) || '[]');
+            const sel = document.getElementById(id);
+            arr.forEach(v => {
+                if (!Array.from(sel.options).some(o => o.value === v)) {
+                    const opt = document.createElement('option');
+                    opt.value = v;
+                    opt.textContent = v;
+                    sel.appendChild(opt);
+                }
+            });
+        } catch(e) {}
+    });
+}
+
+// ── Persistenz ─────────────────────────────────────────────────────────────
+function persist() {
+    try { localStorage.setItem('hm-entries', JSON.stringify(entries)); } catch(e) {}
+}
+</script>
 </body>
 </html>
