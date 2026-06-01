@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stundenerfassung</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Stunden">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" id="manifest-link">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            color: white; text-align: center; margin-bottom: 24px;
+            font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white; border-radius: 16px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.2rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }
+        input, select, textarea {
+            padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        input.error, select.error {
+            border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2);
+        }
+        .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
+        .input-with-button { display: flex; gap: 8px; }
+        .input-with-button select { flex: 1; }
+        .add-btn {
+            background: #667eea; color: white; border: none; border-radius: 8px;
+            width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0;
+        }
+        .add-btn:hover { background: #5a6fd6; }
+
+        /* Install-Banner */
+        .install-banner {
+            background: linear-gradient(135deg, #2ed573, #17c0eb);
+            color: #222; border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 20px; display: none;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .install-banner.visible { display: flex; }
+        .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }
+        .btn-install {
+            background: white; color: #333; border: none; padding: 10px 18px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-dismiss {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer;
+            color: #444; flex-shrink: 0;
+        }
+
+        /* Sync */
+        .sync-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .sync-bar p { font-size: 0.85rem; color: #888; flex: 1 1 100%; margin-bottom: 4px; }
+        .btn-export {
+            background: #2ed573; color: #222; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-export:hover { background: #26c462; }
+        .btn-import {
+            background: #667eea; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-import:hover { background: #5a6fd6; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #333; color: white; padding: 12px 24px;
+            border-radius: 30px; font-size: 0.95rem; z-index: 2000;
+            transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;
+        }
+        .toast.error   { background: #ff4757; }
+        .toast.success { background: #2ed573; color: #222; }
+        .toast.show    { transform: translateX(-50%) translateY(0); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 14px 28px; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th {
+            background: #f8f9fa; padding: 12px; text-align: left;
+            font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0;
+        }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+        tr:hover { background: #f8f9fa; }
+        .delete-btn {
+            background: #ff4757; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+        }
+        .delete-btn:hover { background: #ff3344; }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 20px; border-radius: 12px; margin-top: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .summary-label { font-size: 1rem; opacity: 0.9; }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+
+        /* Modal */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }
+        .modal-content h3 { margin-bottom: 16px; color: #333; }
+        .modal-content input { width: 100%; margin-bottom: 16px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-save   { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .sync-bar { flex-direction: column; align-items: stretch; }
+            .btn-export, .btn-import { justify-content: center; }
+            .install-banner { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔧 Stundenerfassung Hausmeister</h1>
+
+    <!-- Install-Banner (erscheint automatisch wenn installierbar) -->
+    <div class="install-banner" id="install-banner">
+        <p>📲 Als App installieren – direkt vom Homescreen öffnen!</p>
+        <button class="btn-install" id="btn-install">Installieren</button>
+        <button class="btn-dismiss" id="btn-dismiss" title="Schließen">✕</button>
+    </div>
+
+    <!-- SYNC -->
+    <div class="card">
+        <h2>🔄 Daten übertragen (PC ↔ Handy)</h2>
+        <div class="sync-bar">
+            <p>Exportiere deine Daten als Datei und importiere sie auf dem anderen Gerät.</p>
+            <button class="btn-export" onclick="exportData()">⬇ Exportieren</button>
+            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Importieren</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+    </div>
+
+    <!-- ERFASSUNG -->
+    <div class="card">
+        <h2>📝 Neue Arbeitszeit erfassen</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="datum">Datum</label>
+                <input type="date" id="datum">
+            </div>
+            <div class="form-group">
+                <label for="von">Von (z.B. 0800)</label>
+                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="bis">Bis (z.B. 1630)</label>
+                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">
+                <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
+            </div>
+            <div class="form-group">
+                <label for="taetigkeit">Tätigkeit</label>
+                <div class="input-with-button">
+                    <select id="taetigkeit">
+                        <option value="">Bitte wählen…</option>
+                        <option>Reinigung</option>
+                        <option>Gartenarbeit</option>
+                        <option>Reparatur</option>
+                        <option>Winterdienst</option>
+                        <option>Müllentsorgung</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('taetigkeit')" title="Neue Tätigkeit">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ort">Beschäftigungsort</label>
+                <div class="input-with-button">
+                    <select id="ort">
+                        <option value="">Bitte wählen…</option>
+                        <option>Friedenrathstraße 7</option>
+                        <option>Brockesstraße 9</option>
+                        <option>Brockesstraße 9a</option>
+                        <option>Richard-Strauss-Straße 6</option>
+                    </select>
+                    <button class="add-btn" onclick="openModal('ort')" title="Neuen Ort">+</button>
+                </div>
+            </div>
+            <div class="form-group full-width">
+                <label for="bemerkungen">Bemerkungen</label>
+                <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>
+            </div>
+        </div>
+        <button class="btn-primary" id="save-btn">✓ Eintrag speichern</button>
+    </div>
+
+    <!-- TABELLE -->
+    <div class="card">
+        <h2>📋 Erfasste Arbeitszeiten</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum</th><th>Von</th><th>Bis</th><th>Stunden</th>
+                        <th>Tätigkeit</th><th>Ort</th><th>Bemerkung</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="entries-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Noch keine Einträge vorhanden</p>
+            </div>
+        </div>
+        <div class="summary" id="summary" style="display:none;">
+            <span class="summary-label">Gesamtstunden diesen Monat</span>
+            <span class="summary-value" id="total-hours">0,00 Std.</span>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
+        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+            <button class="btn-save" onclick="saveModalEntry()">Hinzufügen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── PWA: Manifest dynamisch einbetten ─────────────────────────────────────
+const manifest = {
+    name: "Stundenerfassung Hausmeister",
+    short_name: "Stunden",
+    description: "Stundenerfassung für den Hausmeister",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#667eea",
+    theme_color: "#667eea",
+    icons: [
+        {
+            src: "data:image/svg+xml," + encodeURIComponent(`
+                <svg xmlns="[w3.org](http://www.w3.org/2000/svg)" viewBox="0 0 512 512">
+                    <rect width="512" height="512" rx="100" fill="#667eea"/>
+                    <text x="256" y="330" font-size="280" text-anchor="middle" fill="white">🔧</text>
+                </svg>
+            `),
+            sizes: "512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+        }
+    ]
+};
+
+const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+const manifestURL  = URL.createObjectURL(manifestBlob);
+document.getElementById('manifest-link').href = manifestURL;
+
+// ── PWA: Service Worker registrieren ──────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    const swCode = `
+        const CACHE = 'stunden-v1';
+        self.addEventListener('install', e => {
+            self.skipWaiting();
+        });
+        self.addEventListener('fetch', e => {
+            e.respondWith(
+                fetch(e.request).catch(() => caches.match(e.request))
+            );
+        });
+    `;
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swURL  = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL).catch(() => {});
+}
+
+// ── PWA: Install-Prompt ───────────────────────────────────────────────────
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').classList.add('visible');
+});
+
+document.getElementById('btn-install').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') showToast('App installiert ✓', 'success');
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('visible');
+});
+
+document.getElementById('btn-dismiss').addEventListener('click', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+});
+
+window.addEventListener('appinstalled', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+    showToast('App erfolgreich installiert ✓', 'success');
+});
+
+// ── State ──────────────────────────────────────────────────────────────────
+let entries = [];
+let modalType = '';
+try { entries = JSON.parse(localStorage.getItem('hm-entries') || '[]'); } catch(e) { entries = []; }
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.getElementById('datum').valueAsDate = new Date();
+loadCustomOptions();
+renderEntries();
+document.getElementById('save-btn').addEventListener('click', addEntry);
+document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveModalEntry(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'error') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+// ── Feldmarkierung ─────────────────────────────────────────────────────────
+function markError(id) {
+    const el = document.getElementById(id);
+    el.classList.add('error');
+    el.addEventListener('input',  () => el.classList.remove('error'), { once: true });
+    el.addEventListener('change', () => el.classList.remove('error'), { once: true });
+}
+
+// ── Zeithelfer ─────────────────────────────────────────────────────────────
+function parseTime(s) {
+    s = String(s).trim();
+    if (!/^\d{4}$/.test(s)) return null;
+    const h = parseInt(s.slice(0,2), 10);
+    const m = parseInt(s.slice(2,4), 10);
+    if (h > 23 || m > 59) return null;
+    return { h, m };
+}
+function fmtTime(t) { return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0'); }
+function calcHours(von, bis) {
+    const v = parseTime(von), b = parseTime(bis);
+    if (!v || !b) return 0;
+    let vMin = v.h * 60 + v.m, bMin = b.h * 60 + b.m;
+    if (bMin <= vMin) bMin += 1440;
+    return (bMin - vMin) / 60;
+}
+function fmtDec(n) { return n.toFixed(2).replace('.', ','); }
+
+// ── Eintrag speichern ──────────────────────────────────────────────────────
+function addEntry() {
+    const datum       = document.getElementById('datum').value;
+    const von         = document.getElementById('von').value.trim();
+    const bis         = document.getElementById('bis').value.trim();
+    const taetigkeit  = document.getElementById('taetigkeit').value;
+    const ort         = document.getElementById('ort').value;
+    const bemerkungen = document.getElementById('bemerkungen').value.trim();
+
+    if (!datum)          { markError('datum');      return showToast('Bitte Datum auswählen'); }
+    if (!parseTime(von)) { markError('von');        return showToast('Startzeit ungültig – z.B. 0800'); }
+    if (!parseTime(bis)) { markError('bis');        return showToast('Endzeit ungültig – z.B. 1630'); }
+    if (!taetigkeit)     { markError('taetigkeit'); return showToast('Bitte Tätigkeit auswählen'); }
+    if (!ort)            { markError('ort');        return showToast('Bitte Beschäftigungsort auswählen'); }
+
+    entries.push({ id: Date.now(), datum, von, bis, hours: calcHours(von, bis), taetigkeit, ort, bemerkungen });
+    entries.sort((a, b) => a.datum.localeCompare(b.datum));
+    persist();
+    renderEntries();
+    showToast('Eintrag gespeichert ✓', 'success');
+    ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('taetigkeit').value = '';
+    document.getElementById('ort').value = '';
+}
+
+// ── Eintrag löschen ────────────────────────────────────────────────────────
+function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    persist();
+    renderEntries();
+    showToast('Eintrag gelöscht');
+}
+
+// ── Tabelle rendern ────────────────────────────────────────────────────────
+function renderEntries() {
+    const tbody   = document.getElementById('entries-body');
+    const empty   = document.getElementById('empty-state');
+    const summary = document.getElementById('summary');
+    tbody.innerHTML = '';
+    if (entries.length === 0) {
+        empty.style.display = 'block'; summary.style.display = 'none'; return;
+    }
+    empty.style.display = 'none'; summary.style.display = 'flex';
+    let total = 0;
+    entries.forEach(e => {
+        total += e.hours;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE')}</td>
+            <td>${fmtTime(parseTime(e.von))}</td>
+            <td>${fmtTime(parseTime(e.bis))}</td>
+            <td><strong>${fmtDec(e.hours)} Std.</strong></td>
+            <td>${e.taetigkeit}</td>
+            <td>${e.ort}</td>
+            <td>${e.bemerkungen || '–'}</td>
+            <td><button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
+}
+
+// ── Export / Import ────────────────────────────────────────────────────────
+function exportData() {
+    const payload = {
+        entries,
+        customTaetigkeiten: JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]'),
+        customOrte:         JSON.parse(localStorage.getItem('hm-custom-orte') || '[]')
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `stundenerfassung_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exportiert ✓', 'success');
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const payload = JSON.parse(e.target.result);
+            if (!Array.isArray(payload.entries)) return showToast('Ungültige Datei');
+            const existingIds = new Set(entries.map(x => x.id));
+            const newEntries  = payload.entries.filter(x => !existingIds.has(x.id));
+            entries = [...entries, ...newEntries].sort((a,b) => a.datum.localeCompare(b.datum));
+            ['hm-custom-taetigkeiten','hm-custom-orte'].forEach((key, i) => {
+                const importedKey = i === 0 ? 'customTaetigkeiten' : 'customOrte';
+                const existing    = JSON.parse(localStorage.getItem(key) || '[]');
+                const merged      = [...new Set([...existing, ...(payload[importedKey] || [])])];
+                localStorage.setItem(key, JSON.stringify(merged));
+            });
+            persist();
+            loadCustomOptions();
+            renderEntries();
+            showToast(`${newEntries.length} neue Einträge importiert ✓`, 'success');
+        } catch(err) { showToast('Fehler beim Lesen der Datei'); }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// ── Dropdown-Erweiterung ───────────────────────────────────────────────────
+function openModal(type) {
+    modalType = type;
+    document.getElementById('modal-title').textContent =
+        type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
+    document.getElementById('modal-input').placeholder =
+        type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
+    document.getElementById('modal-input').value = '';
+    document.getElementById('modal').classList.add('active');
+    setTimeout(() => document.getElementById('modal-input').focus(), 50);
+}
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+function saveModalEntry() {
+    const val = document.getElementById('modal-input').value.trim();
+    if (!val) { showToast('Bitte einen Wert eingeben'); return; }
+    const select = document.getElementById(modalType);
+    if (Array.from(select.options).some(o => o.value === val)) { showToast('Bereits
