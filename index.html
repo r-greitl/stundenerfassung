@@ -20,14 +20,16 @@
         .form-group { display: flex; flex-direction: column; }
         .form-group.full-width { grid-column: 1 / -1; }
         label { font-size: 0.85rem; color: #666; margin-bottom: 6px; font-weight: 500; }
-        input, select, textarea { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white; }
+        input, select, textarea { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; background: white; -webkit-appearance: none; appearance: none; }
+        select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2); }
         input.error, select.error { border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.2); }
         .time-hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
         .input-with-button { display: flex; gap: 8px; }
-        .input-with-button select { flex: 1; }
-        .add-btn { background: #667eea; color: white; border: none; border-radius: 8px; width: 44px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0; }
+        .input-with-button select { flex: 1; min-width: 0; }
+        .add-btn { background: #667eea; color: white; border: none; border-radius: 8px; width: 44px; min-width: 44px; height: 48px; cursor: pointer; font-size: 1.4rem; transition: background 0.2s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .add-btn:hover { background: #5a6fd6; }
+        .add-btn:active { background: #4a5fc6; transform: scale(0.96); }
         .install-banner { background: linear-gradient(135deg, #2ed573, #17c0eb); color: #222; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: none; align-items: center; justify-content: space-between; gap: 12px; }
         .install-banner.visible { display: flex; }
         .install-banner p { font-size: 0.95rem; font-weight: 600; flex: 1; }
@@ -40,29 +42,68 @@
         .toast.error { background: #ff4757; }
         .toast.success { background: #2ed573; color: #222; }
         .toast.show { transform: translateX(-50%) translateY(0); }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 12px; width: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 0.85rem; color: #666; border-bottom: 2px solid #e0e0e0; }
         td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
         tr:hover { background: #f8f9fa; }
-        .delete-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
+        .delete-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; touch-action: manipulation; }
         .delete-btn:hover { background: #ff3344; }
         .summary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
         .summary-label { font-size: 1rem; opacity: 0.9; }
         .summary-value { font-size: 2rem; font-weight: 700; }
         .empty-state { text-align: center; padding: 40px; color: #999; }
         .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; }
-        .modal-content h3 { margin-bottom: 16px; color: #333; }
-        .modal-content input { width: 100%; margin-bottom: 16px; }
-        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
-        .btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-        .btn-save { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } th, td { padding: 8px; font-size: 0.85rem; } .sync-bar { flex-direction: column; align-items: stretch; } .btn-import { justify-content: center; } }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-end; /* Sheet from bottom on mobile */
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 28px 24px 36px;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 520px;
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 4px; margin: 0 auto 20px; }
+        .modal-content h3 { margin-bottom: 16px; color: #333; font-size: 1.1rem; }
+        .modal-input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .modal-input-row input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        .modal-input-row input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2); }
+        .modal-buttons { display: flex; gap: 12px; }
+        .btn-cancel { background: #f0f0f0; color: #555; border: none; padding: 13px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem; flex: 1; touch-action: manipulation; }
+        .btn-save { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 13px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; flex: 2; touch-action: manipulation; }
+        .btn-save:active { opacity: 0.85; }
+
+        @media (min-width: 600px) {
+            .modal-overlay { align-items: center; }
+            .modal-content { border-radius: 20px; max-width: 420px; animation: fadeIn 0.2s ease; }
+            @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+            .modal-handle { display: none; }
+        }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .sync-bar { flex-direction: column; align-items: stretch; }
+            .btn-import { justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -76,13 +117,11 @@
         <button class="btn-dismiss" id="btn-dismiss" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #444;">✕</button>
     </div>
 
-    <!-- HINWEIS CLOUD SYNC -->
     <div class="card">
         <h2><span class="status-badge">🟢 Cloud Live-Sync aktiv</span></h2>
         <div class="sync-bar">
-            <p>Du benötigst keinen Export mehr! Alle Geräte sind automatisch verbunden.</p>
-            <p>Falls du noch eine alte JSON-Datei hast, kannst du sie hier einmalig einlesen:</p>
-            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Alte JSON/Excel-Datei importieren</button>
+            <p>Alle Geräte sind automatisch verbunden. Falls du noch eine alte JSON-Datei hast, kannst du sie hier einmalig einlesen:</p>
+            <button class="btn-import" onclick="document.getElementById('import-file').click()">⬆ Alte JSON-Datei importieren</button>
             <input type="file" id="import-file" accept=".json" style="display:none" onchange="window.importData(event)">
         </div>
     </div>
@@ -96,12 +135,12 @@
             </div>
             <div class="form-group">
                 <label for="von">Von (z.B. 0800)</label>
-                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric">
+                <input type="text" id="von" placeholder="0800" maxlength="4" inputmode="numeric" autocomplete="off">
                 <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
             </div>
             <div class="form-group">
                 <label for="bis">Bis (z.B. 1630)</label>
-                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric">
+                <input type="text" id="bis" placeholder="1630" maxlength="4" inputmode="numeric" autocomplete="off">
                 <span class="time-hint">4 Ziffern ohne Doppelpunkt</span>
             </div>
             <div class="form-group">
@@ -115,7 +154,7 @@
                         <option>Winterdienst</option>
                         <option>Müllentsorgung</option>
                     </select>
-                    <button class="add-btn" onclick="window.openModal('taetigkeit')">+</button>
+                    <button class="add-btn" id="btn-add-taetigkeit" type="button" aria-label="Neue Tätigkeit hinzufügen">＋</button>
                 </div>
             </div>
             <div class="form-group">
@@ -128,7 +167,7 @@
                         <option>Brockesstraße 9a</option>
                         <option>Richard-Strauss-Straße 6</option>
                     </select>
-                    <button class="add-btn" onclick="window.openModal('ort')">+</button>
+                    <button class="add-btn" id="btn-add-ort" type="button" aria-label="Neuen Ort hinzufügen">＋</button>
                 </div>
             </div>
             <div class="form-group full-width">
@@ -136,7 +175,7 @@
                 <textarea id="bemerkungen" rows="2" placeholder="Optionale Anmerkungen…"></textarea>
             </div>
         </div>
-        <button class="btn-primary" onclick="window.addEntry()">✓ Eintrag in Cloud speichern</button>
+        <button class="btn-primary" id="btn-save-entry">✓ Eintrag in Cloud speichern</button>
     </div>
 
     <div class="card">
@@ -165,80 +204,83 @@
 
 <div class="toast" id="toast"></div>
 
-<div class="modal" id="modal">
+<!-- MODAL – iOS-kompatibles Bottom Sheet -->
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
+        <div class="modal-handle"></div>
         <h3 id="modal-title">Neuen Eintrag hinzufügen</h3>
-        <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…">
+        <div class="modal-input-row">
+            <input type="text" id="modal-input" placeholder="Bezeichnung eingeben…" autocomplete="off" autocorrect="off" autocapitalize="on">
+        </div>
         <div class="modal-buttons">
-            <button class="btn-cancel" onclick="window.closeModal()">Abbrechen</button>
-            <button class="btn-save" onclick="window.saveModalEntry()">Hinzufügen</button>
+            <button class="btn-cancel" id="btn-modal-cancel" type="button">Abbrechen</button>
+            <button class="btn-save" id="btn-modal-save" type="button">Hinzufügen</button>
         </div>
     </div>
 </div>
 
-<!-- ============================================== -->
-<!-- PWA CONFIGURATION (Bleibt gleich)              -->
-<!-- ============================================== -->
 <script>
+    // PWA Manifest
     const manifest = {
         name: "Stundenerfassung Hausmeister", short_name: "Stunden", description: "Stundenerfassung mit Cloud Sync", start_url: "./", display: "standalone", background_color: "#667eea", theme_color: "#667eea",
-        icons: [{
-            src: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="[w3.org](http://www.w3.org/2000/svg)" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#667eea"/><text x="256" y="340" font-size="300" text-anchor="middle" fill="white">🔧</text></svg>'),
-            sizes: "512x512", type: "image/svg+xml", purpose: "any maskable"
-        }]
+        icons: [{ src: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#667eea"/><text x="256" y="340" font-size="300" text-anchor="middle" fill="white">🔧</text></svg>'), sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
     };
     document.getElementById('manifest-link').href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
-    
+
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; document.getElementById('install-banner').classList.add('visible'); });
-    document.getElementById('btn-install').addEventListener('click', async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') { document.getElementById('toast').textContent = 'App installiert ✓'; document.getElementById('toast').className = 'toast success show'; setTimeout(() => document.getElementById('toast').className = 'toast', 3000); } deferredPrompt = null; document.getElementById('install-banner').classList.remove('visible'); });
+    document.getElementById('btn-install').addEventListener('click', async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') showToast('App installiert ✓', 'success'); deferredPrompt = null; document.getElementById('install-banner').classList.remove('visible'); });
     document.getElementById('btn-dismiss').addEventListener('click', () => document.getElementById('install-banner').classList.remove('visible'));
+
+    // ── Datum: lokales Datum korrekt setzen (Safari/iOS Fix) ──
+    function getTodayString() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    document.getElementById('datum').value = getTodayString();
+
+    // Toast
+    let toastTimer;
+    function showToast(msg, type = 'error') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = 'toast ' + type + ' show';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+    }
+    window.showToast = showToast;
 </script>
 
-<!-- ============================================== -->
-<!-- FIREBASE & APP SKRIPT                          -->
-<!-- ============================================== -->
 <script type="module">
-    // Firebase Import
-    import { initializeApp } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js)";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, setDoc, enableIndexedDbPersistence } from "[gstatic.com](https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js)";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Firebase Config (von dir)
     const firebaseConfig = {
-      apiKey: "AIzaSyCNBrzWQHlljPxVrP5FUpVIkwmvelJ20Qw",
-      authDomain: "stundenerfassung-45238.firebaseapp.com",
-      projectId: "stundenerfassung-45238",
-      storageBucket: "stundenerfassung-45238.firebasestorage.app",
-      messagingSenderId: "1040201834397",
-      appId: "1:1040201834397:web:1cdeb328b813517f2cd974"
+        apiKey: "AIzaSyCNBrzWQHlljPxVrP5FUpVIkwmvelJ20Qw",
+        authDomain: "stundenerfassung-45238.firebaseapp.com",
+        projectId: "stundenerfassung-45238",
+        storageBucket: "stundenerfassung-45238.firebasestorage.app",
+        messagingSenderId: "1040201834397",
+        appId: "1:1040201834397:web:1cdeb328b813517f2cd974"
     };
 
-    // Firebase starten
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Offline Funktionalität aktivieren
-    try {
-        await enableIndexedDbPersistence(db);
-    } catch (err) {
-        console.warn("Offline Modus konnte nicht aktiviert werden", err);
-    }
+    try { await enableIndexedDbPersistence(db); } catch (err) { console.warn("Offline Modus nicht verfügbar", err); }
 
     let entries = [];
     let modalType = '';
 
-    // ==========================================
-    // 1. ECHZEIT SYNC (Listener)
-    // ==========================================
-    
-    // Arbeitszeiten live laden
+    // ── Realtime Sync ──
     onSnapshot(collection(db, "entries"), (snapshot) => {
-        entries = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        entries.sort((a,b) => a.datum.localeCompare(b.datum));
+        entries = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+        entries.sort((a, b) => a.datum.localeCompare(b.datum));
         renderEntries();
     });
 
-    // Custom Dropdown Menüs live laden
     onSnapshot(doc(db, "settings", "dropdowns"), (snapshot) => {
         if (snapshot.exists()) {
             const data = snapshot.data();
@@ -254,21 +296,15 @@
         });
     }
 
-    // ==========================================
-    // 2. AUTOMATISCHE DATENÜBERNAHME
-    // ==========================================
+    // ── Migration alter Daten ──
     async function migrateOldData() {
         try {
             const localEntries = JSON.parse(localStorage.getItem('hm-entries') || '[]');
             if (localEntries.length > 0) {
-                showToast('Synchronisiere alte Daten mit der Cloud...', 'success');
-                for (const entry of localEntries) {
-                    const { id, ...dataToSave } = entry;
-                    await addDoc(collection(db, "entries"), dataToSave);
-                }
-                localStorage.removeItem('hm-entries'); // Lokale Kopie löschen nach Sync
+                showToast('Synchronisiere alte Daten...', 'success');
+                for (const entry of localEntries) { const { id, ...data } = entry; await addDoc(collection(db, "entries"), data); }
+                localStorage.removeItem('hm-entries');
             }
-
             const customT = JSON.parse(localStorage.getItem('hm-custom-taetigkeiten') || '[]');
             const customO = JSON.parse(localStorage.getItem('hm-custom-orte') || '[]');
             if (customT.length > 0 || customO.length > 0) {
@@ -276,40 +312,21 @@
                 localStorage.removeItem('hm-custom-taetigkeiten');
                 localStorage.removeItem('hm-custom-orte');
             }
-        } catch (error) {
-            console.error("Migration fehlgeschlagen: ", error);
-        }
+        } catch (error) { console.error("Migration fehlgeschlagen:", error); }
     }
-    
-    // Warte kurz und migriere falls Daten existieren
     setTimeout(migrateOldData, 1000);
 
-
-    // ==========================================
-    // 3. UI HELPER 
-    // ==========================================
-    document.getElementById('datum').valueAsDate = new Date();
-
-    let toastTimer;
-    function showToast(msg, type = 'error') {
-        const t = document.getElementById('toast');
-        t.textContent = msg; t.className = 'toast ' + type + ' show';
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
-    }
-    window.showToast = showToast;
-
+    // ── Hilfsfunktionen ──
     function markError(id) {
         const el = document.getElementById(id); el.classList.add('error');
         el.addEventListener('input', () => el.classList.remove('error'), { once: true });
     }
-
     function parseTime(s) {
         s = String(s).trim(); if (!/^\d{4}$/.test(s)) return null;
-        const h = parseInt(s.slice(0,2), 10), m = parseInt(s.slice(2,4), 10);
+        const h = parseInt(s.slice(0, 2), 10), m = parseInt(s.slice(2, 4), 10);
         return (h > 23 || m > 59) ? null : { h, m };
     }
-    function fmtTime(t) { return String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0'); }
+    function fmtTime(t) { return String(t.h).padStart(2, '0') + ':' + String(t.m).padStart(2, '0'); }
     function calcHours(von, bis) {
         const v = parseTime(von), b = parseTime(bis); if (!v || !b) return 0;
         let vMin = v.h * 60 + v.m, bMin = b.h * 60 + b.m;
@@ -317,11 +334,8 @@
     }
     function fmtDec(n) { return n.toFixed(2).replace('.', ','); }
 
-    // ==========================================
-    // 4. HAUPTFUNKTIONEN (in window registrieren)
-    // ==========================================
-
-    window.addEntry = async function() {
+    // ── Eintrag speichern ──
+    document.getElementById('btn-save-entry').addEventListener('click', async () => {
         const datum = document.getElementById('datum').value;
         const von = document.getElementById('von').value.trim();
         const bis = document.getElementById('bis').value.trim();
@@ -336,26 +350,21 @@
         if (!ort) { markError('ort'); return showToast('Bitte Ort wählen'); }
 
         const payload = { datum, von, bis, hours: calcHours(von, bis), taetigkeit, ort, bemerkungen };
-        
         try {
             await addDoc(collection(db, "entries"), payload);
-            showToast('Eintrag in Cloud gespeichert ✓', 'success');
-            ['von','bis','bemerkungen'].forEach(id => document.getElementById(id).value = '');
+            showToast('Eintrag gespeichert ✓', 'success');
+            ['von', 'bis', 'bemerkungen'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('taetigkeit').value = '';
             document.getElementById('ort').value = '';
-        } catch(e) {
-            showToast('Fehler beim Speichern');
-        }
-    }
+            // Datum auf heute zurücksetzen nach Speichern
+            document.getElementById('datum').value = getTodayString();
+        } catch (e) { showToast('Fehler beim Speichern'); }
+    });
 
-    window.deleteEntry = async function(id) {
-        if(!confirm("Eintrag sicher aus der Cloud löschen?")) return;
-        try {
-            await deleteDoc(doc(db, "entries", id));
-            showToast('Gelöscht');
-        } catch(e) {
-            showToast('Fehler beim Löschen');
-        }
+    window.deleteEntry = async function (id) {
+        if (!confirm("Eintrag sicher aus der Cloud löschen?")) return;
+        try { await deleteDoc(doc(db, "entries", id)); showToast('Gelöscht'); }
+        catch (e) { showToast('Fehler beim Löschen'); }
     }
 
     function renderEntries() {
@@ -363,22 +372,18 @@
         const empty = document.getElementById('empty-state');
         const summary = document.getElementById('summary');
         tbody.innerHTML = '';
-        if (entries.length === 0) {
-            empty.style.display = 'block'; summary.style.display = 'none'; return;
-        }
+        if (entries.length === 0) { empty.style.display = 'block'; summary.style.display = 'none'; return; }
         empty.style.display = 'none'; summary.style.display = 'flex';
-        
         let total = 0;
         entries.forEach(e => {
             total += e.hours;
             const tr = document.createElement('tr');
-            tr.innerHTML = 
+            tr.innerHTML =
                 `<td>${new Date(e.datum + 'T12:00:00').toLocaleDateString('de-DE')}</td>
                 <td>${fmtTime(parseTime(e.von))}</td>
                 <td>${fmtTime(parseTime(e.bis))}</td>
                 <td><strong>${fmtDec(e.hours)} Std.</strong></td>
-                <td>${e.taetigkeit}</td>
-                <td>${e.ort}</td>
+                <td>${e.taetigkeit}</td><td>${e.ort}</td>
                 <td>${e.bemerkungen || '–'}</td>
                 <td><button class="delete-btn" onclick="window.deleteEntry('${e.id}')">✕</button></td>`;
             tbody.appendChild(tr);
@@ -386,68 +391,85 @@
         document.getElementById('total-hours').textContent = fmtDec(total) + ' Std.';
     }
 
-    // Modal / Custom Dropdowns
-    window.openModal = function(type) {
+    // ── Modal: iOS-sicher mit touchend + click ──
+    function openModal(type) {
         modalType = type;
-        document.getElementById('modal-title').textContent = type === 'taetigkeit' ? 'Neue Tätigkeit' : 'Neuen Ort';
+        document.getElementById('modal-title').textContent = type === 'taetigkeit' ? 'Neue Tätigkeit hinzufügen' : 'Neuen Ort hinzufügen';
         document.getElementById('modal-input').placeholder = type === 'taetigkeit' ? 'z.B. Treppenhausreinigung' : 'z.B. Musterstraße 1';
         document.getElementById('modal-input').value = '';
         document.getElementById('modal').classList.add('active');
-        setTimeout(() => document.getElementById('modal-input').focus(), 50);
+        // Verzögerter Focus – verhindert iOS-Tastaturflackern
+        setTimeout(() => document.getElementById('modal-input').focus(), 100);
     }
-    window.closeModal = function() { document.getElementById('modal').classList.remove('active'); }
-    
-    window.saveModalEntry = async function() {
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+        document.getElementById('modal-input').blur();
+    }
+
+    async function saveModalEntry() {
         const val = document.getElementById('modal-input').value.trim();
         if (!val) { showToast('Bitte einen Wert eingeben'); return; }
-        
         const select = document.getElementById(modalType);
         if (Array.from(select.options).some(o => o.value === val)) { showToast('Existiert bereits'); return; }
 
-        // Sofort lokal anzeigen
-        select.add(new Option(val, val)); select.value = val;
+        select.add(new Option(val, val));
+        select.value = val;
 
-        // An Cloud senden (merge: true bedeutet, falls die Liste existiert, wird sie angehängt)
         try {
-            const arrUpdate = (modalType === 'taetigkeit') 
-                ? { taetigkeiten: [...Array.from(document.getElementById('taetigkeit').options).map(o=>o.value).filter(v=>v)] }
-                : { orte: [...Array.from(document.getElementById('ort').options).map(o=>o.value).filter(v=>v)] };
-                
+            const arrUpdate = (modalType === 'taetigkeit')
+                ? { taetigkeiten: Array.from(document.getElementById('taetigkeit').options).map(o => o.value).filter(v => v) }
+                : { orte: Array.from(document.getElementById('ort').options).map(o => o.value).filter(v => v) };
             await setDoc(doc(db, "settings", "dropdowns"), arrUpdate, { merge: true });
-            showToast('In Cloud hinzugefügt ✓', 'success');
-        } catch(e) {}
-        window.closeModal();
+            showToast('In Cloud gespeichert ✓', 'success');
+        } catch (e) { /* lokal bereits gesetzt */ }
+        closeModal();
     }
 
-    // JSON Datei Import (falls der Nutzer noch eine Excel zu JSON Datei umziehen will)
-    window.importData = function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    // Buttons per addEventListener (kein onclick im HTML) – iOS-sicher
+    function addTapListener(id, fn) {
+        const el = document.getElementById(id);
+        let tapped = false;
+        el.addEventListener('touchend', (e) => { e.preventDefault(); tapped = true; fn(); });
+        el.addEventListener('click', () => { if (!tapped) fn(); tapped = false; });
+    }
+
+    addTapListener('btn-add-taetigkeit', () => openModal('taetigkeit'));
+    addTapListener('btn-add-ort', () => openModal('ort'));
+    addTapListener('btn-modal-cancel', closeModal);
+    addTapListener('btn-modal-save', saveModalEntry);
+
+    // Modal schließen bei Klick auf Overlay
+    document.getElementById('modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modal')) closeModal();
+    });
+
+    // Enter im Modal-Input
+    document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveModalEntry(); } });
+
+    // JSON Import
+    window.importData = function (event) {
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
-        reader.onload = async function(e) {
+        reader.onload = async function (e) {
             try {
                 const payload = JSON.parse(e.target.result);
                 if (!Array.isArray(payload.entries)) return showToast('Ungültige Datei');
-                showToast('Lade Einträge ans Netz... bitte warten.', 'success');
-                
+                showToast('Importiere...', 'success');
                 let counter = 0;
-                for(const entry of payload.entries) {
-                    const { id, ...dataToSave } = entry;
-                    await addDoc(collection(db, "entries"), dataToSave);
-                    counter++;
-                }
-                
-                showToast(`${counter} neue Einträge importiert ✓`, 'success');
-            } catch(err) {
-                showToast('Fehler beim Lesen der Datei');
-            }
+                for (const entry of payload.entries) { const { id, ...data } = entry; await addDoc(collection(db, "entries"), data); counter++; }
+                showToast(`${counter} Einträge importiert ✓`, 'success');
+            } catch (err) { showToast('Fehler beim Lesen der Datei'); }
             event.target.value = '';
         };
         reader.readAsText(file);
     }
 
-    // Modal Enter Taste Fix
-    document.getElementById('modal-input').addEventListener('keydown', e => { if (e.key === 'Enter') window.saveModalEntry(); });
+    // getTodayString global verfügbar machen für btn-save-entry callback
+    window.getTodayString = function() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    }
 </script>
 </body>
 </html>
